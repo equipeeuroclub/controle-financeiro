@@ -456,7 +456,7 @@
     <section class="card">
       <h2>Nova assinatura</h2>
       <form class="form-grid" id="subForm">
-        <div class="field" style="grid-column: span 2;"><label for="sNome">Serviço</label><input id="sNome" type="text" placeholder="Ex.: TotalPass, Netflix" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="sNome">Serviço</label><input id="sNome" type="text" placeholder="Ex.: Netflix, Spotify" required></div>
         <div class="field"><label for="sVal">Valor / mês</label><input id="sVal" type="number" step="0.01" min="0.01" required></div>
         <div class="field"><label for="sDia">Dia da cobrança</label><input id="sDia" type="number" min="1" max="31" step="1" required></div>
         <div class="field"><label for="sAcc">Conta / cartão</label><select id="sAcc"></select></div>
@@ -1038,13 +1038,13 @@ var SEED_ENC = null; /*__SEED__*/
   }
 
   function renderHomeCats() {
-    // segue o período selecionado no topo; comer fora e transporte de rolê entram em Lazer; limite Lazer = 1200/mês
+    // segue o período selecionado no topo; teto de cada categoria = o limite que você definir na aba Plano × nº de meses do período
     var r = periodRange();
     var t0 = r[0], t1 = (r[1] > todayIso() ? todayIso() : r[1]);
     function midx(ds) { return (+ds.slice(0, 4)) * 12 + (+ds.slice(5, 7)); }
     var factor = Math.max(1, midx(t1) - midx(t0) + 1); // nº de meses no período: teto = limite mensal × meses (redondo)
-    var MERGE = { 'iFood & comer fora': 'Lazer', 'Transporte lazer': 'Lazer' };
-    var HOME_BUDGET = { 'Lazer': 1200 };
+    var MERGE = {};
+    var HOME_BUDGET = {};
     var spent = {};
     state.tx.forEach(function (t) {
       if (t.type !== 'out' || isNeutral(t) || isInvest(t)) return;
