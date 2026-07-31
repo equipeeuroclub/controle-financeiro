@@ -1,11 +1,4 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-<title>Meu Financeiro</title>
+<title>Controle Financeiro</title>
 <style>
   :root {
     --bg: #0A0A0A;
@@ -240,7 +233,7 @@
 <div class="lock" id="lock" hidden style="display:none">
   <div class="lock-card">
     <div class="lock-icon" aria-hidden="true">🔒</div>
-    <h1>Meu Financeiro</h1>
+    <h1>Controle Financeiro</h1>
     <p>Área pessoal. Digite a senha pra entrar.</p>
     <form id="lockForm">
       <input type="password" id="lockPass" placeholder="Senha" autocomplete="current-password" required>
@@ -253,10 +246,10 @@
 <div class="wrap" id="app">
   <header class="top">
     <div class="brand">
-      <div class="mark">R$</div>
+      <div class="mark">L·F</div>
       <div>
-        <h1>Meu Financeiro</h1>
-        <p>controle financeiro pessoal</p>
+        <h1>Controle Financeiro</h1>
+        <p>controle pessoal · dados neste navegador</p>
       </div>
     </div>
     <div class="toolbar">
@@ -272,6 +265,7 @@
       <option value="mes" selected>Mês</option>
       <option value="30d">Últimos 30 dias</option>
       <option value="ano">Ano</option>
+      <option value="bh">Desde nov/2025 (BH)</option>
       <option value="tudo">Tudo</option>
       <option value="custom">Período específico</option>
     </select>
@@ -315,20 +309,14 @@
       <div id="homeCats"></div>
     </section>
 
-    <div class="grid-2">
-      <section class="card">
-        <h2>Fluxo de caixa · últimos 6 meses</h2>
-        <div class="flow" id="flowChart"></div>
-        <div class="legend">
-          <span><span class="dot" style="background:var(--accent)"></span>Entradas</span>
-          <span><span class="dot" style="background:var(--negative)"></span>Saídas</span>
-        </div>
-      </section>
-      <section class="card">
-        <h2>Gastos por categoria no período</h2>
-        <div id="topCats"></div>
-      </section>
-    </div>
+    <section class="card">
+      <h2>Fluxo de caixa · últimos 6 meses</h2>
+      <div class="flow" id="flowChart"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--accent)"></span>Entradas</span>
+        <span><span class="dot" style="background:var(--negative)"></span>Saídas</span>
+      </div>
+    </section>
 
     <div class="kpis">
       <div class="kpi"><div class="k-label">Parcelamentos restantes</div><div class="k-value mv" id="miniParc">–</div><div class="k-sub" id="miniParcSub"></div></div>
@@ -365,7 +353,7 @@
         <div class="field"><label for="fType">Tipo</label>
           <select id="fType"><option value="out">Saída</option><option value="in">Entrada</option></select></div>
         <div class="field" style="grid-column: span 2;"><label for="fDesc">Descrição</label>
-          <input id="fDesc" type="text" placeholder="Ex.: descrição do lançamento" required></div>
+          <input id="fDesc" type="text" placeholder="Ex.: mercado, uber, salário" required></div>
         <div class="field"><label for="fCat">Categoria</label><select id="fCat"></select></div>
         <div class="field"><label for="fAcc">Conta / cartão</label><select id="fAcc"></select></div>
         <div class="field"><label for="fDate">Data</label><input id="fDate" type="date" required></div>
@@ -423,6 +411,7 @@
   <div class="panel" id="panel-parc">
     <div class="kpis">
       <div class="kpi"><div class="k-label">Em andamento</div><div class="k-value" id="parcCount">–</div><div class="k-sub">compras parceladas</div></div>
+      <div class="kpi"><div class="k-label">Gasto mensal</div><div class="k-value mv" id="parcMensal">–</div><div class="k-sub">parcelas deste mês</div></div>
       <div class="kpi"><div class="k-label">Valor total</div><div class="k-value mv" id="parcTotal">–</div></div>
       <div class="kpi"><div class="k-label">Já pago</div><div class="k-value pos mv" id="parcPago">–</div></div>
       <div class="kpi"><div class="k-label">Restante</div><div class="k-value mv" id="parcResto" style="color:var(--warning)">–</div><div class="k-sub" id="parcFim"></div></div>
@@ -477,10 +466,18 @@
       <div class="kpi"><div class="k-label">Valor atual</div><div class="k-value mv" id="invAtual">–</div></div>
       <div class="kpi"><div class="k-label">Rendimento</div><div class="k-value mv" id="invRend">–</div><div class="k-sub" id="invRendPct"></div></div>
     </div>
+    <section class="card" id="invGoalWrap">
+      <h2>Quanto tenho vs quanto preciso</h2>
+      <div class="flow" id="invGoalChart"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--accent)"></span>Tenho</span>
+        <span><span class="dot" style="background:var(--muted)"></span>Preciso (meta)</span>
+      </div>
+    </section>
     <section class="card">
       <h2>Novo investimento</h2>
       <form class="form-grid" id="invForm">
-        <div class="field" style="grid-column: span 2;"><label for="iNome">Nome / ativo</label><input id="iNome" type="text" placeholder="Ex.: CDB, Tesouro, ações, cripto" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="iNome">Nome / ativo</label><input id="iNome" type="text" placeholder="Ex.: CDB 110%, Tesouro, ETF" required></div>
         <div class="field"><label for="iTipo">Tipo</label>
           <select id="iTipo">
             <option>Renda fixa</option><option>Tesouro</option><option>Ações</option>
@@ -527,9 +524,9 @@
     <section class="card">
       <h2>Novo cartão</h2>
       <form class="form-grid" id="cardForm">
-        <div class="field" style="grid-column: span 2;"><label for="cNome">Nome do cartão</label><input id="cNome" type="text" placeholder="Ex.: nome do cartão" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="cNome">Nome do cartão</label><input id="cNome" type="text" placeholder="Ex.: Meu cartão de crédito" required></div>
         <div class="field"><label for="cBanco">Banco</label>
-          <select id="cBanco"><option>Banco principal</option><option>Segundo banco</option><option>Outro</option></select></div>
+          <select id="cBanco"><option>Nubank</option><option>Inter</option><option>C6 Bank</option><option>Itaú</option><option>Bradesco</option><option>Santander</option><option>Banco do Brasil</option><option>Caixa</option><option>Outro</option></select></div>
         <div class="field"><label for="cLimite">Limite total</label><input id="cLimite" type="number" step="1" min="0" required></div>
         <div class="field"><label for="cFech">Dia fechamento</label><input id="cFech" type="number" min="1" max="31"></div>
         <div class="field"><label for="cVenc">Dia vencimento</label><input id="cVenc" type="number" min="1" max="31"></div>
@@ -552,9 +549,9 @@
     <section class="card">
       <h2>A receber (quem te deve)</h2>
       <form class="form-grid" id="recvForm">
-        <div class="field" style="grid-column: span 2;"><label for="rNome">Quem</label><input id="rNome" type="text" placeholder="Ex.: nome da pessoa" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="rNome">Quem</label><input id="rNome" type="text" placeholder="Ex.: Josué (Pitchula)" required></div>
         <div class="field"><label for="rVal">Valor</label><input id="rVal" type="number" step="0.01" min="0.01" required></div>
-        <div class="field" style="grid-column: span 2;"><label for="rDesc">Referente a</label><input id="rDesc" type="text" placeholder="Ex.: motivo"></div>
+        <div class="field" style="grid-column: span 2;"><label for="rDesc">Referente a</label><input id="rDesc" type="text" placeholder="Ex.: ingresso + bebidas"></div>
         <div><button class="btn primary" type="submit">Adicionar</button></div>
       </form>
       <div id="recvList" style="margin-top:12px;"></div>
@@ -564,7 +561,7 @@
     <section class="card">
       <h2>Lista de compras / desejos</h2>
       <form class="form-grid" id="wishForm">
-        <div class="field" style="grid-column: span 2;"><label for="wItem">Item</label><input id="wItem" type="text" placeholder="Ex.: o que quer comprar" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="wItem">Item</label><input id="wItem" type="text" placeholder="Ex.: Flores pra mãe" required></div>
         <div class="field"><label for="wVal">Valor estimado</label><input id="wVal" type="number" step="0.01" min="0" placeholder="0,00"></div>
         <div><button class="btn primary" type="submit">Adicionar</button></div>
       </form>
@@ -843,7 +840,6 @@ var SEED_ENC = null; /*__SEED__*/
     var tx = filteredTx();
     renderKpis(tx);
     renderFlow();
-    renderTopCats(tx);
     renderHomeCats();
     renderMinis();
     renderGoal();
@@ -852,6 +848,7 @@ var SEED_ENC = null; /*__SEED__*/
     renderParc();
     renderSubs();
     renderInv();
+    renderInvGoals();
     renderCatsFull(tx);
     renderMonthlyMatrix();
     renderBudgets();
@@ -1038,7 +1035,7 @@ var SEED_ENC = null; /*__SEED__*/
   }
 
   function renderHomeCats() {
-    // segue o período selecionado no topo; teto de cada categoria = o limite que você definir na aba Plano × nº de meses do período
+    // segue o período selecionado no topo; comer fora e transporte de rolê entram em Lazer; limite Lazer = 1200/mês
     var r = periodRange();
     var t0 = r[0], t1 = (r[1] > todayIso() ? todayIso() : r[1]);
     function midx(ds) { return (+ds.slice(0, 4)) * 12 + (+ds.slice(5, 7)); }
@@ -1053,28 +1050,39 @@ var SEED_ENC = null; /*__SEED__*/
       var c = MERGE[t.cat] || t.cat;
       spent[c] = (spent[c] || 0) + t.value;
     });
+    // academia (assinatura) conta como Saúde, mesmo estando em assinaturas
+    if (!accSel) state.subs.forEach(function (s) { if (/totalpass|gympass|smart ?fit|academia|wellhub/i.test(s.nome)) spent['Saúde'] = (spent['Saúde'] || 0) + s.valor * factor; });
     var mb = state.budgets['default'] || {};
     function budgetFor(c) {
       var base = HOME_BUDGET[c] != null ? HOME_BUDGET[c] : (Number(mb[c]) || 0);
       return base * factor;
     }
-    var HIDE = { 'Assinaturas': 1 }; // assinaturas têm aba própria; não poluir a home
+    var HIDE = { 'Assinaturas': 1, 'iFood & comer fora': 1 }; // assinaturas têm aba própria; iFood entra em Lazer
     var setc = {};
     Object.keys(spent).forEach(function (c) { setc[c] = 1; });
     Object.keys(mb).forEach(function (c) { if (!HIDE[c]) setc[c] = 1; });          // mostra categorias do plano mesmo zeradas
     Object.keys(HOME_BUDGET).forEach(function (c) { if (!HIDE[c]) setc[c] = 1; });
-    var cats = Object.keys(setc).sort(function (a, b) { return (spent[b] || 0) - (spent[a] || 0); });
+    var ORDER = ['Moradia', 'Alimentação', 'iFood & comer fora', 'Transporte', 'Lazer', 'Transporte lazer', 'Saúde', 'Psicólogo', 'Viagem', 'Roupas', 'Presentes', 'Cuidados pessoais', 'Compras', 'Educação', 'Imprevistos', 'Impostos', 'Dívidas', 'Outros'];
+    var cats = Object.keys(setc).sort(function (a, b) {
+      var ia = ORDER.indexOf(a); if (ia < 0) ia = 999;
+      var ib = ORDER.indexOf(b); if (ib < 0) ib = 999;
+      return ia - ib || a.localeCompare(b);
+    });
     var total = 0; cats.forEach(function (c) { total += (spent[c] || 0); });
     $('homeCatsTotal').textContent = cats.length ? ('total: ' + fmt(total) + ' · ' + periodLabel()) : '';
     var box = $('homeCats'); box.innerHTML = '';
     if (!cats.length) { box.innerHTML = '<div class="empty">Sem gastos no período.</div>'; return; }
     var maxNoBudget = 1;
     cats.forEach(function (c) { if (!budgetFor(c)) maxNoBudget = Math.max(maxNoBudget, spent[c]); });
-    cats.forEach(function (c) {
+    cats.forEach(function (c, idx) {
       var b = budgetFor(c), s = spent[c] || 0;
       var pct = b > 0 ? Math.min(100, s / b * 100) : Math.min(100, s / maxNoBudget * 100);
       var row = document.createElement('div'); row.className = 'bar-row';
-      var n = document.createElement('div'); n.className = 'b-name'; n.textContent = c;
+      var isSub = (c === 'Transporte lazer');
+      if (isSub) { row.style.paddingTop = '2px'; row.style.marginTop = '-5px'; }
+      if (cats[idx + 1] === 'Transporte lazer') { row.style.borderBottom = 'none'; }
+      var n = document.createElement('div'); n.className = 'b-name';
+      if (isSub) { n.textContent = '↳ ' + c; n.style.paddingLeft = '12px'; n.style.opacity = '0.75'; } else { n.textContent = c; }
       var bar = document.createElement('div'); bar.className = 'b-bar';
       var fill = document.createElement('div');
       fill.className = 'b-fill' + (b > 0 && s > b ? ' over' : (b > 0 && s > b * 0.85 ? ' close' : ''));
@@ -1088,7 +1096,7 @@ var SEED_ENC = null; /*__SEED__*/
   }
 
   function renderTopCats(tx) {
-    var box = $('topCats'); box.innerHTML = '';
+    var box = $('topCats'); if (!box) return; box.innerHTML = '';
     var totals = catTotals(tx);
     if (!totals.length) { box.innerHTML = '<div class="empty">Sem gastos no período.</div>'; return; }
     var max = totals[0].v;
@@ -1101,12 +1109,15 @@ var SEED_ENC = null; /*__SEED__*/
     return { paid: paid, resto: (p.n - paid) * p.valor, pago: paid * p.valor, total: p.n * p.valor, fim: shiftYm(p.inicio, p.n - 1) };
   }
   function parcAgg(accountName) {
-    var agg = { count: 0, total: 0, pago: 0, resto: 0, fim: null };
+    var agg = { count: 0, total: 0, pago: 0, resto: 0, mensal: 0, fim: null };
+    var cur = refMonthKey();
     state.parc.forEach(function (p) {
       if (accountName && p.account !== accountName) return;
       var i = parcInfo(p);
       if (i.paid >= p.n) return;
       agg.count++; agg.total += i.total; agg.pago += i.pago; agg.resto += i.resto;
+      var d = monthDiff(p.inicio, cur);
+      if (d >= 0 && d < p.n) agg.mensal += p.valor;
       if (!agg.fim || i.fim > agg.fim) agg.fim = i.fim;
     });
     return agg;
@@ -1258,6 +1269,7 @@ var SEED_ENC = null; /*__SEED__*/
   function renderParc() {
     var agg = parcAgg(accSel || null);
     $('parcCount').textContent = agg.count;
+    $('parcMensal').textContent = fmt(agg.mensal);
     $('parcTotal').textContent = fmt(agg.total);
     $('parcPago').textContent = fmt(agg.pago);
     $('parcResto').textContent = fmt(agg.resto);
@@ -1363,8 +1375,20 @@ var SEED_ENC = null; /*__SEED__*/
     $('invRendPct').textContent = ap > 0 ? (rend / ap * 100).toFixed(1).replace('.', ',') + '% sobre o aportado' : '';
     var box = $('invList'); box.innerHTML = '';
     $('invEmpty').hidden = state.inv.length > 0;
-    state.inv.slice().sort(function (a, b) { return b.atual - a.atual; }).forEach(function (i) {
-      var it = document.createElement('div'); it.className = 'item';
+    var COLORS = ['#BACD0B', '#5AA9E6', '#F2B441', '#B07CE8', '#4FC08D', '#E8705B', '#8A94A6'];
+    var sortedInv = state.inv.slice().sort(function (a, b) { return b.atual - a.atual; });
+    if (sortedInv.length) {
+      var distWrap = document.createElement('div'); distWrap.style.cssText = 'margin:2px 0 18px;';
+      var track = document.createElement('div'); track.style.cssText = 'display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--surface-2);';
+      sortedInv.forEach(function (i, idx) { var seg = document.createElement('div'); seg.title = i.nome; seg.style.cssText = 'height:100%;background:' + COLORS[idx % COLORS.length] + ';width:' + (at > 0 ? i.atual / at * 100 : 0) + '%'; track.appendChild(seg); });
+      distWrap.appendChild(track);
+      var leg = document.createElement('div'); leg.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:9px;font-size:0.76rem;';
+      sortedInv.forEach(function (i, idx) { var s = document.createElement('span'); s.style.cssText = 'display:inline-flex;align-items:center;gap:5px;color:var(--muted);'; var dot = document.createElement('span'); dot.style.cssText = 'width:9px;height:9px;border-radius:2px;flex:0 0 auto;background:' + COLORS[idx % COLORS.length]; var tx = document.createElement('span'); tx.className = 'mv'; tx.textContent = i.nome + ' · ' + (at > 0 ? Math.round(i.atual / at * 100) : 0) + '%'; s.appendChild(dot); s.appendChild(tx); leg.appendChild(s); });
+      distWrap.appendChild(leg);
+      box.appendChild(distWrap);
+    }
+    sortedInv.forEach(function (i, idx) {
+      var it = document.createElement('div'); it.className = 'item'; it.style.borderLeft = '3px solid ' + COLORS[idx % COLORS.length];
       var head = document.createElement('div'); head.className = 'i-head';
       var left = document.createElement('div');
       var title = document.createElement('div'); title.className = 'i-title'; title.textContent = i.nome;
@@ -1394,7 +1418,34 @@ var SEED_ENC = null; /*__SEED__*/
       right.appendChild(edit); right.appendChild(del);
       head.appendChild(left); head.appendChild(right);
       it.appendChild(head);
+      if (i.meta && i.meta > 0) {
+        var pctm = Math.min(100, i.atual / i.meta * 100);
+        var prog = document.createElement('div'); prog.className = 'progress'; prog.style.marginTop = '9px';
+        var fill = document.createElement('div'); fill.className = 'p-fill'; fill.style.width = pctm + '%';
+        prog.appendChild(fill); it.appendChild(prog);
+        var mline = document.createElement('div'); mline.className = 'i-sub mv'; mline.style.marginTop = '5px';
+        mline.textContent = 'meta ' + fmt(i.meta) + ' · faltam ' + fmt(Math.max(0, i.meta - i.atual)) + ' · ' + pctm.toFixed(0) + '%';
+        it.appendChild(mline);
+      }
       box.appendChild(it);
+    });
+  }
+  function renderInvGoals() {
+    var box = $('invGoalChart'); if (!box) return; box.innerHTML = '';
+    var wrap = $('invGoalWrap');
+    var metas = state.inv.filter(function (i) { return i.meta && i.meta > 0 && i.atual < i.meta; });
+    if (!metas.length) { if (wrap) wrap.hidden = true; return; }
+    if (wrap) wrap.hidden = false;
+    var max = 1; metas.forEach(function (i) { max = Math.max(max, i.meta, i.atual); });
+    metas.forEach(function (i) {
+      var col = document.createElement('div'); col.className = 'col';
+      var bars = document.createElement('div'); bars.className = 'bars';
+      var bt = document.createElement('div'); bt.className = 'bar in'; bt.style.height = Math.max(2, i.atual / max * 118) + 'px'; bt.title = 'Tenho ' + fmt(i.atual);
+      var bp = document.createElement('div'); bp.className = 'bar'; bp.style.height = Math.max(2, i.meta / max * 118) + 'px'; bp.style.background = 'var(--muted)'; bp.style.opacity = '0.45'; bp.title = 'Preciso ' + fmt(i.meta);
+      bars.appendChild(bt); bars.appendChild(bp);
+      var lbl = document.createElement('div'); lbl.className = 'm-label'; lbl.style.textTransform = 'none';
+      lbl.textContent = i.nome.length > 11 ? i.nome.split(' ')[0] : i.nome;
+      col.appendChild(bars); col.appendChild(lbl); box.appendChild(col);
     });
   }
   $('invForm').addEventListener('submit', function (e) {
@@ -1597,7 +1648,7 @@ var SEED_ENC = null; /*__SEED__*/
     URL.revokeObjectURL(a.href);
   }
   $('exportJson').addEventListener('click', function () {
-    download('meu-financeiro-backup.json', JSON.stringify(state, null, 2), 'application/json');
+    download('controle-financeiro-backup.json', JSON.stringify(state, null, 2), 'application/json');
     toast('Backup exportado');
   });
   $('exportCsv').addEventListener('click', function () {
@@ -1605,7 +1656,7 @@ var SEED_ENC = null; /*__SEED__*/
     state.tx.slice().sort(function (a, b) { return a.date.localeCompare(b.date); }).forEach(function (t) {
       rows.push([t.date, t.type === 'in' ? 'entrada' : 'saida', '"' + t.desc.replace(/"/g, '""') + '"', t.cat, t.account, String(t.value).replace('.', ',')]);
     });
-    download('meu-financeiro.csv', '﻿' + rows.map(function (r) { return r.join(';'); }).join('\n'), 'text/csv');
+    download('controle-financeiro.csv', '﻿' + rows.map(function (r) { return r.join(';'); }).join('\n'), 'text/csv');
     toast('CSV exportado');
   });
   $('importJson').addEventListener('click', function () { $('importFile').click(); });
@@ -1902,11 +1953,11 @@ var SEED_ENC = null; /*__SEED__*/
       state.cards.forEach(function (c) { if (c.manual > 0) localManual[c.nome] = c.manual; });
       var merged = incoming;
       merged.tx = incoming.tx.concat(manuais);
-      if (Object.keys(state.budgets).length) merged.budgets = state.budgets;
+      // orçamentos: sempre vêm do seed (fonte da verdade), não preserva teto local antigo
       if (Object.keys(state.goals).length) merged.goals = state.goals;
       merged.receivables = state.receivables.length ? state.receivables : incoming.receivables;
       merged.wishlist = state.wishlist.length ? state.wishlist : incoming.wishlist;
-      merged.inv.forEach(function (i) { if (localInv[i.nome] != null) i.atual = localInv[i.nome]; });
+      // investimentos: o valor vem sempre do seed (fonte da verdade), não preserva valor local antigo
       merged.cards.forEach(function (c) { if (localManual[c.nome] != null) c.manual = localManual[c.nome]; });
       merged.seq = Math.max(incoming.seq, state.seq) + 1;
       state = merged;
@@ -1925,6 +1976,3 @@ var SEED_ENC = null; /*__SEED__*/
   render();
 })();
 </script>
-
-</body>
-</html>
