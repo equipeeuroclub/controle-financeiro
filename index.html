@@ -105,11 +105,20 @@
   .period-label { font-weight: 600; font-size: 0.9rem; min-width: 120px; text-align: center; text-transform: capitalize; }
 
   /* tabs */
+  .tabs-wrap { position: relative; margin-bottom: 16px; }
   .tabs {
-    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; padding-right: 34px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-behavior: smooth;
   }
   .tabs::-webkit-scrollbar { display: none; }
+  .tabs-wrap::before, .tabs-wrap::after {
+    content: ''; position: absolute; top: 0; bottom: 6px; width: 40px; pointer-events: none;
+    z-index: 3; opacity: 0; transition: opacity .2s;
+  }
+  .tabs-wrap::before { left: 0; background: linear-gradient(to right, var(--bg) 20%, rgba(0,0,0,0)); }
+  .tabs-wrap::after { right: 0; background: linear-gradient(to left, var(--bg) 20%, rgba(0,0,0,0)); }
+  .tabs-wrap.can-left::before { opacity: 1; }
+  .tabs-wrap.can-right::after { opacity: 1; }
   .tab {
     background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
     padding: 8px 16px; cursor: pointer; white-space: nowrap; font-size: 0.88rem;
@@ -289,6 +298,7 @@
     <select id="accFilter" aria-label="Conta"></select>
   </div>
 
+  <div class="tabs-wrap" id="tabsWrap">
   <nav class="tabs" id="tabs">
     <button class="tab active" data-tab="geral">Visão geral</button>
     <button class="tab" data-tab="tx">Transações</button>
@@ -299,6 +309,7 @@
     <button class="tab" data-tab="cards">Cartões</button>
     <button class="tab" data-tab="plan">Planejamento</button>
   </nav>
+  </div>
 
   <!-- VISÃO GERAL -->
   <div class="panel active" id="panel-geral">
@@ -1981,6 +1992,19 @@ var SEED_ENC = null; /*__SEED__*/
   applyPriv();
   fillCats();
   render();
+  (function () {
+    var wrap = document.getElementById('tabsWrap'), tabs = document.getElementById('tabs');
+    if (wrap && tabs) {
+      var upd = function () {
+        var max = tabs.scrollWidth - tabs.clientWidth;
+        wrap.classList.toggle('can-left', tabs.scrollLeft > 4);
+        wrap.classList.toggle('can-right', tabs.scrollLeft < max - 4);
+      };
+      tabs.addEventListener('scroll', upd, { passive: true });
+      window.addEventListener('resize', upd);
+      upd(); setTimeout(upd, 250);
+    }
+  })();
 })();
 </script>
 </body>
