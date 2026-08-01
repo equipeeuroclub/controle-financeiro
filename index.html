@@ -318,7 +318,7 @@
   <div class="panel active" id="panel-geral">
     <div class="kpis">
       <div class="kpi"><div class="k-label">Entradas</div><div class="k-value pos mv" id="kpiIn">–</div></div>
-      <div class="kpi"><div class="k-label">Saídas</div><div class="k-value neg mv" id="kpiOut">–</div></div>
+      <div class="kpi"><div class="k-label">Saídas</div><div class="k-value neg mv" id="kpiOut">–</div><div class="k-sub" id="kpiOutSub"></div></div>
       <div class="kpi"><div class="k-label">Saldo do período</div><div class="k-value mv" id="kpiBalance">–</div><div class="k-sub" id="kpiBalanceSub"></div></div>
       <div class="kpi"><div class="k-label">Taxa de poupança</div><div class="k-value mv" id="kpiSave">–</div><div class="k-sub">meta: ≥ 20%</div></div>
       <div class="kpi"><div class="k-label">Investido no período</div><div class="k-value mv" id="kpiInvestPer">–</div><div class="k-sub" id="kpiInvestSub"></div></div>
@@ -976,16 +976,30 @@ var SEED_ENC = null; /*__SEED__*/
     renderPlan(); toast('Item adicionado');
   });
 
+  function committedOut() {
+    if (accSel) return 0;
+    var r = periodRange(), ym = r[0].slice(0, 7), end = r[1].slice(0, 7), total = 0, guard = 0, subsMonth = 0;
+    state.subs.forEach(function (s) { subsMonth += s.valor; });
+    while (ym <= end && guard < 60) {
+      state.parc.forEach(function (p) { var d = monthDiff(p.inicio, ym); if (d >= 0 && d < p.n) total += p.valor; });
+      total += subsMonth; ym = shiftYm(ym, 1); guard++;
+    }
+    return total;
+  }
   function renderKpis(tx) {
     var tin = 0, tout = 0, aporte = 0, resgate = 0;
     tx.forEach(function (t) {
       if (isNeutral(t)) return;
       if (isInvest(t)) { if (t.type === 'out') aporte += t.value; else resgate += t.value; return; }
-      if (t.type === 'in') tin += t.value; else tout += t.value;
+      if (t.type === 'in') { tin += t.value; return; }
+      if (/parcela\s*\d/i.test(t.desc || '')) return; // parcelas vêm do widget de parcelamentos, não duplicar
+      tout += t.value;
     });
+    tout += committedOut();
     var bal = tin - tout;
     $('kpiIn').textContent = fmt(tin);
     $('kpiOut').textContent = fmt(tout);
+    if ($('kpiOutSub')) $('kpiOutSub').textContent = accSel ? '' : 'inclui parcelas + assinaturas';
     $('kpiInvestPer').textContent = fmt(aporte - resgate);
     $('kpiInvestSub').textContent = 'aportou ' + fmt(aporte) + ' · resgatou ' + fmt(resgate);
     var kb = $('kpiBalance');
