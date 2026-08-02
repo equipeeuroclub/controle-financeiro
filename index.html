@@ -986,7 +986,6 @@ var SEED_ENC = null; /*__SEED__*/
     var r = periodRange(), ym = r[0].slice(0, 7), end = r[1].slice(0, 7), total = 0, guard = 0, subsMonth = 0;
     state.subs.forEach(function (s) { subsMonth += s.valor; });
     while (ym <= end && guard < 60) {
-      state.parc.forEach(function (p) { var d = monthDiff(p.inicio, ym); if (d >= 0 && d < p.n) total += p.valor; });
       total += subsMonth; ym = shiftYm(ym, 1); guard++;
     }
     return total;
@@ -998,7 +997,6 @@ var SEED_ENC = null; /*__SEED__*/
       if (isInvest(t)) { if (t.type === 'out') aporte += t.value; else resgate += t.value; return; }
       if (t.type === 'in') { tin += t.value; return; }
       if (t.cat === 'Assinaturas') return; // assinaturas vêm do widget de assinaturas, não duplicar
-      if (/parcela\s*\d/i.test(t.desc || '') && parcActiveVals(t.date.slice(0, 7))[Math.round(t.value * 100)]) return; // parcela que também está no widget: não duplicar (parcela antiga sem widget continua contando)
       tout += t.value;
     });
     tout += committedOut();
