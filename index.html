@@ -245,11 +245,23 @@
     .period-label { min-width: 96px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* relatório imprimível */
+  #printReport { display: none; }
+  @media print {
+    body.printing > *:not(#printReport) { display: none !important; }
+    body.printing #printReport { display: block; padding: 16px 20px; color: #000; background: #fff; }
+    #printReport h1 { font-size: 18px; margin: 0 0 4px; }
+    #printReport h2 { font-size: 13px; margin: 16px 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+    #printReport p { font-size: 12px; margin: 4px 0; }
+    #printReport table { width: 100%; border-collapse: collapse; }
+    #printReport td, #printReport th { border-bottom: 1px solid #ccc; padding: 4px 6px; font-size: 11px; text-align: left; }
+  }
 </style>
+
 </head>
 <body>
-
-<div class="lock" id="lock" hidden style="display:none">
+<div class="lock" id="lock">
   <div class="lock-card">
     <div class="lock-icon" aria-hidden="true">🔒</div>
     <h1>Controle Financeiro</h1>
@@ -262,10 +274,10 @@
   </div>
 </div>
 
-<div class="wrap" id="app">
+<div class="wrap" id="app" hidden>
   <header class="top">
     <div class="brand">
-      <div class="mark">L·F</div>
+      <div class="mark">R$</div>
       <div>
         <h1>Controle Financeiro</h1>
         <p>controle pessoal · dados neste navegador</p>
@@ -325,6 +337,17 @@
     </div>
     <p class="note" style="margin:-6px 0 14px;">Entradas e saídas ignoram dinheiro que só muda de lugar: transferências entre suas contas, pagamento de fatura, empréstimos devolvidos, reembolsos e repasses. Investimento aparece separado — guardar não é gastar.</p>
 
+    <section class="card" id="scoreCard">
+      <div class="h-row"><h2>Saúde financeira</h2><span class="k-value mv" id="scoreVal" style="font-size:1.5rem;">–</span></div>
+      <div id="scoreLabel" class="k-sub" style="margin:-8px 0 12px;"></div>
+      <div id="scoreBreak"></div>
+    </section>
+
+    <section class="card" id="fechoCard">
+      <h2>Fecho do mês</h2>
+      <div id="fechoText" class="mv" style="font-size:0.9rem;line-height:1.6;"></div>
+    </section>
+
     <section class="card">
       <div class="h-row"><h2>Gastos por categoria</h2><span class="k-sub mv" id="homeCatsTotal"></span></div>
       <div id="homeCats"></div>
@@ -345,6 +368,8 @@
       <div class="kpi"><div class="k-label">Fatura atual (cartões)</div><div class="k-value mv" id="miniFatura">–</div><div class="k-sub" id="miniFaturaSub"></div></div>
       <div class="kpi"><div class="k-label">Limite disponível</div><div class="k-value mv" id="miniLimite">–</div><div class="k-sub" id="miniLimiteSub"></div></div>
       <div class="kpi"><div class="k-label">Investimentos</div><div class="k-value mv" id="miniInv">–</div><div class="k-sub" id="miniInvSub"></div></div>
+      <div class="kpi"><div class="k-label">Custo do rolê</div><div class="k-value mv" id="miniRole">–</div><div class="k-sub" id="miniRoleSub"></div></div>
+      <div class="kpi"><div class="k-label">Patrimônio</div><div class="k-value mv" id="miniPatr">–</div><div class="k-sub" id="miniPatrSub"></div></div>
     </div>
 
     <section class="card">
@@ -379,6 +404,7 @@
         <div class="field"><label for="fAcc">Conta / cartão</label><select id="fAcc"></select></div>
         <div class="field"><label for="fDate">Data</label><input id="fDate" type="date" required></div>
         <div class="field"><label for="fVal">Valor</label><input id="fVal" type="number" step="0.01" min="0.01" placeholder="0,00" required></div>
+        <div class="field"><label for="fRefund">Reembolso</label><label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;padding-top:7px;"><input id="fRefund" type="checkbox" style="width:auto;"> abate a categoria</label></div>
         <div><button class="btn primary" type="submit">Adicionar</button></div>
       </form>
     </section>
@@ -423,8 +449,9 @@
         <button class="btn" id="exportCsv" type="button">Exportar planilha (CSV)</button>
         <button class="btn" id="importJson" type="button">Importar backup</button>
         <input type="file" id="importFile" accept=".json" hidden>
+        <button class="btn" id="reportBtn" type="button">Relatório do mês (PDF)</button>
       </div>
-      <p class="note">Os dados ficam só neste navegador. Exporte o backup JSON de vez em quando.</p>
+      <p class="note">Os dados ficam só neste navegador. Exporte o backup JSON de vez em quando. O relatório do mês abre a impressão do navegador (salve como PDF).</p>
     </section>
   </div>
 
@@ -466,7 +493,7 @@
     <section class="card">
       <h2>Nova assinatura</h2>
       <form class="form-grid" id="subForm">
-        <div class="field" style="grid-column: span 2;"><label for="sNome">Serviço</label><input id="sNome" type="text" placeholder="Ex.: Netflix, Spotify" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="sNome">Serviço</label><input id="sNome" type="text" placeholder="Ex.: TotalPass, Netflix" required></div>
         <div class="field"><label for="sVal">Valor / mês</label><input id="sVal" type="number" step="0.01" min="0.01" required></div>
         <div class="field"><label for="sDia">Dia da cobrança</label><input id="sDia" type="number" min="1" max="31" step="1" required></div>
         <div class="field"><label for="sAcc">Conta / cartão</label><select id="sAcc"></select></div>
@@ -477,6 +504,12 @@
       <h2>Suas assinaturas</h2>
       <div id="subsList"></div>
       <div class="empty" id="subsEmpty" hidden>Nenhuma assinatura cadastrada.</div>
+    </section>
+    <section class="card">
+      <h2>Possíveis assinaturas detectadas</h2>
+      <div id="ghostList"></div>
+      <div class="empty" id="ghostEmpty" hidden>Nada recorrente escondido. 👍</div>
+      <p class="note">Cobranças que se repetem há 3+ meses com valor parecido e que você ainda não cadastrou. Pode ter assinatura esquecida aqui. Clique em "cadastrar" pra trazer pro controle.</p>
     </section>
   </div>
 
@@ -498,7 +531,7 @@
     <section class="card">
       <h2>Novo investimento</h2>
       <form class="form-grid" id="invForm">
-        <div class="field" style="grid-column: span 2;"><label for="iNome">Nome / ativo</label><input id="iNome" type="text" placeholder="Ex.: CDB 110%, Tesouro, ETF" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="iNome">Nome / ativo</label><input id="iNome" type="text" placeholder="Ex.: CDB C6 110%, BTC, MXRF11" required></div>
         <div class="field"><label for="iTipo">Tipo</label>
           <select id="iTipo">
             <option>Renda fixa</option><option>Tesouro</option><option>Ações</option>
@@ -545,9 +578,9 @@
     <section class="card">
       <h2>Novo cartão</h2>
       <form class="form-grid" id="cardForm">
-        <div class="field" style="grid-column: span 2;"><label for="cNome">Nome do cartão</label><input id="cNome" type="text" placeholder="Ex.: Meu cartão de crédito" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="cNome">Nome do cartão</label><input id="cNome" type="text" placeholder="Ex.: Nubank Gold, C6 Bandeirado" required></div>
         <div class="field"><label for="cBanco">Banco</label>
-          <select id="cBanco"><option>Nubank</option><option>Inter</option><option>C6 Bank</option><option>Itaú</option><option>Bradesco</option><option>Santander</option><option>Banco do Brasil</option><option>Caixa</option><option>Outro</option></select></div>
+          <select id="cBanco"><option>Nubank</option><option>C6 Bank</option><option>Outro</option></select></div>
         <div class="field"><label for="cLimite">Limite total</label><input id="cLimite" type="number" step="1" min="0" required></div>
         <div class="field"><label for="cFech">Dia fechamento</label><input id="cFech" type="number" min="1" max="31"></div>
         <div class="field"><label for="cVenc">Dia vencimento</label><input id="cVenc" type="number" min="1" max="31"></div>
@@ -580,6 +613,18 @@
       <p class="note">Quando a pessoa pagar, clica em "recebi" — a entrada é lançada automaticamente nas transações e some daqui.</p>
     </section>
     <section class="card">
+      <h2>Metas (objetivos)</h2>
+      <form class="form-grid" id="metaForm">
+        <div class="field" style="grid-column: span 2;"><label for="mNome">Meta</label><input id="mNome" type="text" placeholder="Ex.: Comprar notebook" required></div>
+        <div class="field"><label for="mAlvo">Custo estimado</label><input id="mAlvo" type="number" step="0.01" min="0" placeholder="0,00"></div>
+        <div class="field"><label for="mPrazo">Prazo (opcional)</label><input id="mPrazo" type="month"></div>
+        <div><button class="btn primary" type="submit">Adicionar meta</button></div>
+      </form>
+      <div id="metaList" style="margin-top:12px;"></div>
+      <div class="empty" id="metaEmpty" hidden>Nenhuma meta ainda. O que você quer realizar?</div>
+      <p class="note">Metas são objetivos (uma viagem, um carro, uma reserva). Defina o custo, guarde aos poucos e acompanhe o progresso. Diferente da lista de desejos, que é compra pontual.</p>
+    </section>
+    <section class="card">
       <h2>Lista de compras / desejos</h2>
       <form class="form-grid" id="wishForm">
         <div class="field" style="grid-column: span 2;"><label for="wItem">Item</label><input id="wItem" type="text" placeholder="Ex.: Flores pra mãe" required></div>
@@ -595,6 +640,7 @@
 </div>
 
 <div class="toast" id="toast" role="status"></div>
+<div id="printReport"></div>
 
 <script>
 var SEED_ENC = null; /*__SEED__*/
@@ -633,6 +679,7 @@ var SEED_ENC = null; /*__SEED__*/
       })
       .then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
   }
+  if (!HASH) { show(); return; }
   if (sessionStorage.getItem(UNLOCK_KEY) === HASH) { show(); return; }
   document.getElementById('lockForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -657,13 +704,16 @@ var SEED_ENC = null; /*__SEED__*/
 <script>
 (function () {
   var KEY = 'financas-dash-v1';
-  var CATS_OUT = ['Moradia', 'Alimentação', 'iFood & comer fora', 'Transporte', 'Transporte lazer', 'Saúde', 'Psicólogo', 'Lazer', 'Viagem', 'Roupas', 'Presentes', 'Assinaturas', 'Educação', 'Compras', 'Imprevistos', 'Cuidados pessoais', 'Impostos', 'Dívidas', 'Investimentos', 'Outros'];
-  var CATS_IN = ['Salário', 'Freelas', 'Vendas online', 'Rendimentos', 'Família', 'Outros'];
-  var BASE_ACCOUNTS = ['Conta corrente', 'Poupança', 'Cartão de crédito', 'Carteira', 'Outro'];
+  var CATS_OUT = ['Moradia', 'Alimentação', 'iFood & comer fora', 'Transporte', 'Transporte lazer', 'Saúde', 'Psicólogo', 'Lazer', 'Viagem', 'Roupas', 'Presentes', 'Assinaturas', 'Educação', 'Compras', 'Imprevistos', 'Cuidados pessoais', 'Performance VV', 'Projetos', 'Negócios', 'Impostos', 'Jogos e apostas', 'Fraude/Roubo', 'Dívidas', 'Investimentos', 'Outros'];
+  var CATS_IN = ['Salário', 'Freelas', 'Vendas online', 'Recebimentos PIX', 'Negócios', 'Rendimentos', 'Família', 'Outros'];
+  var BASE_ACCOUNTS = ['C6 Bank', 'Nubank', 'Nubank PJ', 'Carteira', 'Outro'];
   // categorias neutras: dinheiro que muda de lugar, não renda nem gasto
-  var NEUTRAL = { 'Transferências internas': 1, 'Pagamento de fatura': 1, 'Empréstimos': 1, 'Reembolsos': 1, 'Repasses de terceiros': 1, 'Revenda': 1 };
+  var NEUTRAL = { 'Transferências internas': 1, 'Pagamento de fatura': 1, 'Empréstimos': 1, 'Reembolsos': 1, 'Repasses de terceiros': 1, 'Revenda': 1, 'Projeto Apostas': 1 };
   function isNeutral(t) { return !!NEUTRAL[t.cat]; }
   function isInvest(t) { return t.cat === 'Investimentos'; }
+  function isRefund(t) { return t.refund === true || (t.type === 'in' && /estorno|reembolso/i.test(t.desc || '')); }
+  function subActive(s, ym) { return (!s.desde || ym >= s.desde) && (!s.ate || ym <= s.ate); }
+  function subsForMonth(ym) { var t = 0; state.subs.forEach(function (s) { if (subActive(s, ym)) t += s.valor; }); return t; }
   var MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   var MONTHS_S = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
@@ -692,6 +742,7 @@ var SEED_ENC = null; /*__SEED__*/
       cards: Array.isArray(s.cards) ? s.cards : [],
       receivables: Array.isArray(s.receivables) ? s.receivables : [],
       wishlist: Array.isArray(s.wishlist) ? s.wishlist : [],
+      metas: Array.isArray(s.metas) ? s.metas : [],
       seedVersion: typeof s.seedVersion === 'string' ? s.seedVersion : '',
       seq: typeof s.seq === 'number' ? s.seq : 1
     };
@@ -864,11 +915,14 @@ var SEED_ENC = null; /*__SEED__*/
     renderFlow();
     renderHomeCats();
     renderMinis();
+    renderScore();
+    renderFecho();
     renderGoal();
     renderRecent(tx);
     renderTxTable(tx);
     renderParc();
     renderSubs();
+    renderGhostSubs();
     renderInv();
     renderInvGoals();
     renderCatsFull(tx);
@@ -957,6 +1011,46 @@ var SEED_ENC = null; /*__SEED__*/
     });
     $('wishTotal').textContent = fmt(wt);
     $('wishSub').textContent = state.wishlist.length + ' item(ns)' + (wsem ? ' · ' + wsem + ' sem estimativa' : '');
+
+    // metas (objetivos)
+    var mbox = $('metaList');
+    if (mbox) {
+      mbox.innerHTML = '';
+      var metas = state.metas || [];
+      if ($('metaEmpty')) $('metaEmpty').hidden = metas.length > 0;
+      metas.forEach(function (m) {
+        var alvo = m.alvo || 0, guard = m.guardado || 0;
+        var it = document.createElement('div'); it.className = 'item';
+        var head = document.createElement('div'); head.className = 'i-head';
+        var left = document.createElement('div');
+        var title = document.createElement('div'); title.className = 'i-title'; title.textContent = m.nome;
+        var sub = document.createElement('div'); sub.className = 'i-sub';
+        sub.textContent = (alvo > 0 ? fmt(guard) + ' de ' + fmt(alvo) : 'sem custo estimado') + (m.prazo ? ' · até ' + m.prazo : '');
+        if (alvo > 0 && m.prazo) {
+          var mf = monthDiff(todayIso().slice(0, 7), m.prazo);
+          if (guard >= alvo) sub.textContent += ' · concluída ✓';
+          else if (mf > 0) sub.textContent += ' · guarde ' + fmt((alvo - guard) / mf) + '/mês';
+          else sub.textContent += ' · faltam ' + fmt(alvo - guard) + ' (prazo vencido)';
+        }
+        left.appendChild(title); left.appendChild(sub);
+        var right = document.createElement('div'); right.style.display = 'flex'; right.style.gap = '6px'; right.style.alignItems = 'center';
+        var est = document.createElement('input'); est.type = 'number'; est.step = '0.01'; est.min = '0'; est.placeholder = 'custo'; est.value = alvo || '';
+        est.setAttribute('aria-label', 'Custo de ' + m.nome); est.classList.add('mv');
+        est.style.cssText = 'width:88px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);text-align:right;';
+        est.addEventListener('change', function () { m.alvo = parseFloat(est.value) || 0; save(); renderPlan(); toast('Custo salvo'); });
+        var gin = document.createElement('input'); gin.type = 'number'; gin.step = '0.01'; gin.min = '0'; gin.placeholder = 'guardei'; gin.value = guard || '';
+        gin.setAttribute('aria-label', 'Guardado para ' + m.nome); gin.classList.add('mv');
+        gin.style.cssText = 'width:88px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);text-align:right;';
+        gin.addEventListener('change', function () { m.guardado = parseFloat(gin.value) || 0; save(); renderPlan(); toast('Progresso salvo'); });
+        var del = document.createElement('button'); del.className = 'del'; del.textContent = '×'; del.setAttribute('aria-label', 'Remover ' + m.nome);
+        del.addEventListener('click', function () { state.metas = state.metas.filter(function (x) { return x.id !== m.id; }); save(); render(); toast('Meta removida'); });
+        right.appendChild(est); right.appendChild(gin); right.appendChild(del);
+        head.appendChild(left); head.appendChild(right);
+        it.appendChild(head);
+        if (alvo > 0) { var pr = document.createElement('div'); pr.className = 'progress'; var pf = document.createElement('div'); pf.className = 'p-fill'; pf.style.width = Math.min(100, guard / alvo * 100) + '%'; pr.appendChild(pf); it.appendChild(pr); }
+        mbox.appendChild(it);
+      });
+    }
   }
 
   $('recvForm').addEventListener('submit', function (e) {
@@ -975,6 +1069,16 @@ var SEED_ENC = null; /*__SEED__*/
     save(); $('wItem').value = ''; $('wVal').value = '';
     renderPlan(); toast('Item adicionado');
   });
+  if ($('metaForm')) $('metaForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var nome = $('mNome').value.trim();
+    if (!nome) return;
+    state.metas.push({ id: state.seq++, nome: nome, alvo: parseFloat($('mAlvo').value) || 0, guardado: 0, prazo: $('mPrazo').value || '' });
+    save(); $('mNome').value = ''; $('mAlvo').value = ''; $('mPrazo').value = '';
+    renderPlan(); toast('Meta adicionada');
+  });
+  if ($('reportBtn')) $('reportBtn').addEventListener('click', printReport);
+  window.addEventListener('afterprint', function () { document.body.classList.remove('printing'); });
 
   function parcActiveVals(ym) {
     var s = {};
@@ -983,10 +1087,9 @@ var SEED_ENC = null; /*__SEED__*/
   }
   function committedOut() {
     if (accSel) return 0;
-    var r = periodRange(), ym = r[0].slice(0, 7), end = r[1].slice(0, 7), total = 0, guard = 0, subsMonth = 0;
-    state.subs.forEach(function (s) { subsMonth += s.valor; });
+    var r = periodRange(), ym = r[0].slice(0, 7), end = r[1].slice(0, 7), total = 0, guard = 0;
     while (ym <= end && guard < 60) {
-      total += subsMonth; ym = shiftYm(ym, 1); guard++;
+      total += subsForMonth(ym); ym = shiftYm(ym, 1); guard++;
     }
     return total;
   }
@@ -995,6 +1098,7 @@ var SEED_ENC = null; /*__SEED__*/
     tx.forEach(function (t) {
       if (isNeutral(t)) return;
       if (isInvest(t)) { if (t.type === 'out') aporte += t.value; else resgate += t.value; return; }
+      if (isRefund(t)) { tout -= t.value; return; } // estorno/reembolso abate a saída da categoria, não vira renda
       if (t.type === 'in') { tin += t.value; return; }
       if (t.cat === 'Assinaturas') return; // assinaturas vêm do widget de assinaturas, não duplicar
       tout += t.value;
@@ -1028,8 +1132,12 @@ var SEED_ENC = null; /*__SEED__*/
         if (t.date.slice(0, 7) !== ym) return;
         if (accSel && t.account !== accSel) return;
         if (isNeutral(t) || isInvest(t)) return;
-        if (t.type === 'in') tin += t.value; else tout += t.value;
+        if (isRefund(t)) { tout -= t.value; return; }
+        if (t.type === 'in') { tin += t.value; return; }
+        if (t.cat === 'Assinaturas') return; // vêm do widget, iguala o cálculo das Saídas
+        tout += t.value;
       });
+      if (!accSel) tout += subsForMonth(ym); // inclui assinaturas do mês, igual ao KPI Saídas
       return { ym: ym, tin: tin, tout: tout };
     });
     var max = 1;
@@ -1055,7 +1163,9 @@ var SEED_ENC = null; /*__SEED__*/
   function catTotals(tx) {
     var map = {};
     tx.forEach(function (t) {
-      if (t.type !== 'out' || isNeutral(t) || isInvest(t)) return;
+      if (isNeutral(t) || isInvest(t)) return;
+      if (isRefund(t)) { map[t.cat] = (map[t.cat] || 0) - t.value; return; }
+      if (t.type !== 'out') return;
       map[t.cat] = (map[t.cat] || 0) + t.value;
     });
     return Object.keys(map).map(function (c) { return { cat: c, v: map[c] }; })
@@ -1075,29 +1185,51 @@ var SEED_ENC = null; /*__SEED__*/
   }
 
   function renderHomeCats() {
-    // segue o período selecionado no topo; comer fora e transporte de rolê entram em Lazer; limite Lazer = 1200/mês
+    // segue o período selecionado no topo; comer fora e transporte de rolê entram em Lazer
     var r = periodRange();
     var t0 = r[0], t1 = (r[1] > todayIso() ? todayIso() : r[1]);
     function midx(ds) { return (+ds.slice(0, 4)) * 12 + (+ds.slice(5, 7)); }
     var factor = Math.max(1, midx(t1) - midx(t0) + 1); // nº de meses no período: teto = limite mensal × meses (redondo)
     var MERGE = {};
     var HOME_BUDGET = {};
+    var SUBS = { 'Transporte lazer': 1, 'iFood & comer fora': 1 }; // sub-linhas: aninham na categoria-mãe com ↳
+    var LABEL = { 'iFood & comer fora': 'iFood / padarias' };
     var spent = {};
     state.tx.forEach(function (t) {
-      if (t.type !== 'out' || isNeutral(t) || isInvest(t)) return;
+      if (isNeutral(t) || isInvest(t)) return;
       if (t.date < t0 || t.date > t1) return;
       if (accSel && t.account !== accSel) return;
+      var refund = isRefund(t);
+      if (!refund && t.type !== 'out') return;
       var c = MERGE[t.cat] || t.cat;
-      spent[c] = (spent[c] || 0) + t.value;
+      spent[c] = (spent[c] || 0) + (refund ? -t.value : t.value);
     });
-    // academia (assinatura) conta como Saúde, mesmo estando em assinaturas
-    if (!accSel) state.subs.forEach(function (s) { if (/totalpass|gympass|smart ?fit|academia|wellhub/i.test(s.nome)) spent['Saúde'] = (spent['Saúde'] || 0) + s.valor * factor; });
+    // academia (assinatura) conta como Saúde, somando só os meses ativos de cada plano no período
+    if (!accSel) {
+      var gymRe = /totalpass|gympass|smart ?fit|super ?fit|academia|wellhub/i, ymG = t0.slice(0, 7), endG = t1.slice(0, 7), gym = 0, gGuard = 0;
+      while (ymG <= endG && gGuard < 60) { state.subs.forEach(function (s) { if (gymRe.test(s.nome) && subActive(s, ymG)) gym += s.valor; }); ymG = shiftYm(ymG, 1); gGuard++; }
+      if (gym) spent['Saúde'] = (spent['Saúde'] || 0) + gym;
+    }
+    // média histórica por categoria (para o comparativo, só faz sentido na visão de 1 mês)
+    var singleMonth = (midx(t1) - midx(t0) === 0), avg = {};
+    if (singleMonth) {
+      var mset = {}, allc = {};
+      state.tx.forEach(function (t) {
+        if (isNeutral(t) || isInvest(t)) return;
+        var rf = isRefund(t); if (!rf && t.type !== 'out') return;
+        mset[t.date.slice(0, 7)] = 1;
+        var cc = MERGE[t.cat] || t.cat;
+        allc[cc] = (allc[cc] || 0) + (rf ? -t.value : t.value);
+      });
+      var nmA = Math.max(1, Object.keys(mset).length);
+      Object.keys(allc).forEach(function (c) { avg[c] = allc[c] / nmA; });
+    }
     var mb = state.budgets['default'] || {};
     function budgetFor(c) {
       var base = HOME_BUDGET[c] != null ? HOME_BUDGET[c] : (Number(mb[c]) || 0);
       return base * factor;
     }
-    var HIDE = { 'Assinaturas': 1, 'iFood & comer fora': 1 }; // assinaturas têm aba própria; iFood entra em Lazer
+    var HIDE = { 'Assinaturas': 1 }; // assinaturas têm aba própria
     var setc = {};
     Object.keys(spent).forEach(function (c) { setc[c] = 1; });
     Object.keys(mb).forEach(function (c) { if (!HIDE[c]) setc[c] = 1; });          // mostra categorias do plano mesmo zeradas
@@ -1118,11 +1250,11 @@ var SEED_ENC = null; /*__SEED__*/
       var b = budgetFor(c), s = spent[c] || 0;
       var pct = b > 0 ? Math.min(100, s / b * 100) : Math.min(100, s / maxNoBudget * 100);
       var row = document.createElement('div'); row.className = 'bar-row';
-      var isSub = (c === 'Transporte lazer');
+      var isSub = !!SUBS[c];
       if (isSub) { row.style.paddingTop = '2px'; row.style.marginTop = '-5px'; }
-      if (cats[idx + 1] === 'Transporte lazer') { row.style.borderBottom = 'none'; }
+      if (SUBS[cats[idx + 1]]) { row.style.borderBottom = 'none'; }
       var n = document.createElement('div'); n.className = 'b-name';
-      if (isSub) { n.textContent = '↳ ' + c; n.style.paddingLeft = '12px'; n.style.opacity = '0.75'; } else { n.textContent = c; }
+      if (isSub) { n.textContent = '↳ ' + (LABEL[c] || c); n.style.paddingLeft = '12px'; n.style.opacity = '0.75'; } else { n.textContent = LABEL[c] || c; }
       var bar = document.createElement('div'); bar.className = 'b-bar';
       var fill = document.createElement('div');
       fill.className = 'b-fill' + (b > 0 && s > b ? ' over' : (b > 0 && s > b * 0.85 ? ' close' : ''));
@@ -1130,6 +1262,16 @@ var SEED_ENC = null; /*__SEED__*/
       bar.appendChild(fill);
       var nums = document.createElement('div'); nums.className = 'b-nums mv';
       nums.textContent = fmt(s) + (b > 0 ? ' / ' + fmt(b) : '');
+      if (b > 0 && s > b) {
+        var over = document.createElement('span'); over.textContent = ' estourou';
+        over.style.cssText = 'color:var(--negative);font-size:0.7rem;margin-left:6px;font-weight:600;';
+        nums.appendChild(over);
+      } else if (singleMonth && avg[c] > 0 && s >= avg[c] * 1.4) {
+        var tag = document.createElement('span'); tag.className = 'mv';
+        tag.textContent = ' ↑ ' + (s / avg[c]).toFixed(1) + '× média';
+        tag.style.cssText = 'color:var(--warning);font-size:0.7rem;margin-left:6px;';
+        nums.appendChild(tag);
+      }
       row.appendChild(n); row.appendChild(bar); row.appendChild(nums);
       box.appendChild(row);
     });
@@ -1184,9 +1326,11 @@ var SEED_ENC = null; /*__SEED__*/
     var pa = parcAgg();
     $('miniParc').textContent = fmt(pa.resto);
     $('miniParcSub').textContent = pa.count + ' compras ativas';
-    var sm = 0; state.subs.forEach(function (s) { sm += s.valor; });
+    var curYmM = todayIso().slice(0, 7);
+    var actSubs = state.subs.filter(function (s) { return subActive(s, curYmM); });
+    var sm = 0; actSubs.forEach(function (s) { sm += s.valor; });
     $('miniSubs').textContent = fmt(sm);
-    $('miniSubsSub').textContent = state.subs.length + ' ativas · ' + fmt(sm * 12) + '/ano';
+    $('miniSubsSub').textContent = actSubs.length + ' ativas · ' + fmt(sm * 12) + '/ano';
     var fat = 0, lim = 0, uso = 0;
     state.cards.forEach(function (c) {
       var f = cardFatura(c);
@@ -1201,6 +1345,149 @@ var SEED_ENC = null; /*__SEED__*/
     state.inv.forEach(function (i) { ap += i.aportado; at += i.atual; });
     $('miniInv').textContent = fmt(at);
     $('miniInvSub').textContent = (at - ap >= 0 ? '+' : '') + fmt(at - ap) + ' de rendimento';
+    if ($('miniRole')) { $('miniRole').textContent = fmt(roleTotal()); $('miniRoleSub').textContent = 'Lazer + transporte de rolê'; }
+    if ($('miniPatr')) { var nw = netWorth(); $('miniPatr').textContent = fmt(nw.liquido); $('miniPatrSub').textContent = 'invest − parcelas − fatura'; }
+  }
+
+  // ---- custo do rolê ----
+  function roleTotal() {
+    var r = periodRange(), t0 = r[0], t1 = (r[1] > todayIso() ? todayIso() : r[1]), tot = 0;
+    state.tx.forEach(function (t) {
+      if (t.date < t0 || t.date > t1) return;
+      if (accSel && t.account !== accSel) return;
+      if (t.cat !== 'Lazer' && t.cat !== 'Transporte lazer') return;
+      if (isRefund(t)) { tot -= t.value; return; }
+      if (t.type !== 'out') return;
+      tot += t.value;
+    });
+    return tot;
+  }
+  // ---- patrimônio (aproximado: investimentos − parcelas restantes − fatura atual) ----
+  function netWorth() {
+    var ativos = 0; state.inv.forEach(function (i) { ativos += i.atual; });
+    var pass = parcAgg().resto;
+    state.cards.forEach(function (c) { pass += cardFatura(c); });
+    return { ativos: ativos, passivos: pass, liquido: ativos - pass };
+  }
+  // ---- agregação mês a mês (renda/gasto com assinaturas do histórico e reembolso abatendo) ----
+  function monthsData() {
+    var bym = {};
+    state.tx.forEach(function (t) {
+      if (isNeutral(t) || isInvest(t)) return;
+      var ym = t.date.slice(0, 7);
+      if (!bym[ym]) bym[ym] = { tin: 0, tout: 0 };
+      if (isRefund(t)) { bym[ym].tout -= t.value; return; }
+      if (t.type === 'in') { bym[ym].tin += t.value; return; }
+      if (t.cat === 'Assinaturas') return;
+      bym[ym].tout += t.value;
+    });
+    Object.keys(bym).forEach(function (ym) { bym[ym].tout += subsForMonth(ym); });
+    return bym;
+  }
+  function financeStats() {
+    var bym = monthsData(), cur = todayIso().slice(0, 7);
+    var yms = Object.keys(bym).filter(function (m) { return m < cur; }).sort();
+    var n = yms.length || 1, rin = 0, rout = 0, posCount = 0, last6 = yms.slice(-6);
+    yms.forEach(function (m) { rin += bym[m].tin; rout += bym[m].tout; });
+    last6.forEach(function (m) { if (bym[m].tin - bym[m].tout >= 0) posCount++; });
+    var rendaMes = rin / n, gastoMes = rout / n;
+    var rate = rendaMes > 0 ? (rendaMes - gastoMes) / rendaMes : 0;
+    var ativos = 0; state.inv.forEach(function (i) { ativos += i.atual; });
+    var mesesReserva = gastoMes > 0 ? ativos / gastoMes : 0;
+    var comprometimento = rendaMes > 0 ? (parcAgg().mensal + subsForMonth(cur)) / rendaMes : 0;
+    var consistencia = last6.length ? posCount / last6.length : 0;
+    return { rendaMes: rendaMes, gastoMes: gastoMes, rate: rate, mesesReserva: mesesReserva, comprometimento: comprometimento, consistencia: consistencia, bym: bym };
+  }
+  function scoreFrom(s) {
+    var pPoup = Math.max(0, Math.min(40, s.rate / 0.30 * 40));
+    var pRes = Math.max(0, Math.min(30, s.mesesReserva / 6 * 30));
+    var pComp = Math.max(0, Math.min(20, 20 - (s.comprometimento / 0.40 * 20)));
+    var pCons = Math.max(0, Math.min(10, s.consistencia * 10));
+    return { total: Math.round(pPoup + pRes + pComp + pCons), pPoup: pPoup, pRes: pRes, pComp: pComp, pCons: pCons };
+  }
+  function renderScore() {
+    if (!$('scoreCard')) return;
+    var st = financeStats(), sc = scoreFrom(st);
+    var lab = sc.total >= 80 ? 'Excelente' : sc.total >= 60 ? 'Boa' : sc.total >= 40 ? 'Atenção' : 'Crítica';
+    var sv = $('scoreVal'); sv.textContent = sc.total + '/100'; sv.className = 'k-value mv ' + (sc.total >= 60 ? 'pos' : (sc.total >= 40 ? '' : 'neg'));
+    $('scoreLabel').textContent = lab + ' · poupa ' + Math.round(st.rate * 100) + '% · reserva cobre ' + st.mesesReserva.toFixed(1) + ' meses de gasto';
+    var box = $('scoreBreak'); box.innerHTML = '';
+    box.appendChild(barRow('Poupança', sc.pPoup, 40, Math.round(sc.pPoup) + '/40'));
+    box.appendChild(barRow('Reserva', sc.pRes, 30, Math.round(sc.pRes) + '/30'));
+    box.appendChild(barRow('Baixa dívida', sc.pComp, 20, Math.round(sc.pComp) + '/20'));
+    box.appendChild(barRow('Consistência', sc.pCons, 10, Math.round(sc.pCons) + '/10'));
+  }
+  function renderFecho() {
+    var el = $('fechoText'); if (!el) return;
+    var st = financeStats(), bym = st.bym, mk = refMonthKey();
+    var cur = bym[mk] || { tin: 0, tout: 0 };
+    var saldo = cur.tin - cur.tout, rate = cur.tin > 0 ? Math.round(saldo / cur.tin * 100) : 0;
+    var txt = MONTHS[+mk.slice(5, 7) - 1] + ': entrou ' + fmt(cur.tin) + ', saiu ' + fmt(cur.tout) + ', ' + (saldo >= 0 ? 'sobrou ' : 'faltou ') + fmt(Math.abs(saldo)) + ' (' + rate + '%).';
+    function catByMonth(ym) { var m = {}; state.tx.forEach(function (t) { if (t.date.slice(0, 7) !== ym) return; if (isNeutral(t) || isInvest(t)) return; if (isRefund(t)) { m[t.cat] = (m[t.cat] || 0) - t.value; return; } if (t.type !== 'out') return; m[t.cat] = (m[t.cat] || 0) + t.value; }); return m; }
+    var pYm = shiftYm(mk, -1), cm = catByMonth(mk), pm = catByMonth(pYm), topCat = null, topDelta = 0;
+    Object.keys(cm).forEach(function (c) { var dl = cm[c] - (pm[c] || 0); if (dl > topDelta) { topDelta = dl; topCat = c; } });
+    if (topCat) txt += ' Quem mais subiu vs ' + MONTHS_S[+pYm.slice(5, 7) - 1] + ': ' + topCat + ' (+' + fmt(topDelta) + ').';
+    if (mk === todayIso().slice(0, 7)) {
+      var dia = +todayIso().slice(8, 10), diasMes = new Date(+mk.slice(0, 4), +mk.slice(5, 7), 0).getDate();
+      var proj = dia > 0 ? cur.tout / dia * diasMes : cur.tout;
+      txt += ' No ritmo atual, projeção de saída até fechar o mês: ' + fmt(proj) + '.';
+    }
+    el.textContent = txt;
+  }
+  // ---- detector de assinaturas fantasma ----
+  function detectGhostSubs() {
+    function norm(desc) { var s = (desc || '').toLowerCase(); s = s.replace(/compra no débito -|transferência.*?pix -|pix .*? de /g, ''); s = s.replace(/[0-9]/g, '').replace(/[*x\-•.\/]/g, ' ').replace(/\s+/g, ' ').trim(); return s.slice(0, 22); }
+    var NONSUB = { 'Moradia': 1, 'Investimentos': 1, 'Dívidas': 1, 'Transporte': 1, 'Transporte lazer': 1 };
+    var groups = {};
+    state.tx.forEach(function (t) { if (t.type !== 'out' || isNeutral(t) || isInvest(t) || t.cat === 'Assinaturas' || NONSUB[t.cat] || t.value > 400) return; var k = norm(t.desc); if (k.length < 4) return; (groups[k] = groups[k] || []).push(t); });
+    var subKeys = state.subs.map(function (s) { return s.nome.toLowerCase().split(' ')[0]; });
+    var out = [];
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k], months = {}; g.forEach(function (t) { months[t.date.slice(0, 7)] = 1; });
+      var nm = Object.keys(months).length; if (nm < 3) return;
+      var vals = g.map(function (t) { return t.value; }).slice().sort(function (a, b) { return a - b; }), med = vals[Math.floor(vals.length / 2)];
+      var consist = g.filter(function (t) { return Math.abs(t.value - med) <= Math.max(2, med * 0.25); }).length; if (consist < 3) return;
+      if (subKeys.some(function (n) { return n && k.indexOf(n) >= 0; })) return;
+      out.push({ nome: (g[g.length - 1].desc || '').replace(/^Compra no débito - /, '').replace(/^Transferência.*?- /, '').slice(0, 28), valor: med, meses: nm, cat: g[0].cat });
+    });
+    return out.sort(function (a, b) { return b.meses - a.meses || b.valor - a.valor; }).slice(0, 8);
+  }
+  function renderGhostSubs() {
+    var box = $('ghostList'); if (!box) return; box.innerHTML = '';
+    var g = detectGhostSubs();
+    if ($('ghostEmpty')) $('ghostEmpty').hidden = g.length > 0;
+    g.forEach(function (x) {
+      var it = document.createElement('div'); it.className = 'item';
+      var head = document.createElement('div'); head.className = 'i-head';
+      var left = document.createElement('div');
+      var ti = document.createElement('div'); ti.className = 'i-title'; ti.textContent = x.nome;
+      var su = document.createElement('div'); su.className = 'i-sub'; su.textContent = '~' + fmt(x.valor) + '/mês · visto em ' + x.meses + ' meses · ' + x.cat;
+      left.appendChild(ti); left.appendChild(su);
+      var add = document.createElement('button'); add.className = 'btn'; add.type = 'button'; add.textContent = 'cadastrar';
+      add.addEventListener('click', function () { state.subs.push({ id: state.seq++, nome: x.nome, valor: Math.round(x.valor * 100) / 100, dia: 1, account: 'C6 Bank' }); save(); render(); toast('Assinatura cadastrada'); });
+      var rt = document.createElement('div'); rt.style.display = 'flex'; rt.style.gap = '6px'; rt.style.alignItems = 'center'; rt.appendChild(add);
+      head.appendChild(left); head.appendChild(rt); it.appendChild(head); box.appendChild(it);
+    });
+  }
+  // ---- relatório do mês (impressão / PDF) ----
+  function monthReportHtml() {
+    var mk = refMonthKey(), st = financeStats(), cur = st.bym[mk] || { tin: 0, tout: 0 };
+    var mtx = state.tx.filter(function (t) { return t.date.slice(0, 7) === mk && (!accSel || t.account === accSel); });
+    var cats = catTotals(mtx), saldo = cur.tin - cur.tout;
+    var rows = cats.map(function (c) { return '<tr><td>' + c.cat + '</td><td style="text-align:right">' + fmt(c.v) + '</td></tr>'; }).join('');
+    var top = mtx.filter(function (t) { return t.type === 'out' && !isNeutral(t) && !isInvest(t); }).sort(function (a, b) { return b.value - a.value; }).slice(0, 12);
+    var trows = top.map(function (t) { return '<tr><td>' + t.date.slice(8, 10) + '/' + t.date.slice(5, 7) + '</td><td>' + (t.desc || '').replace(/[<>]/g, '').slice(0, 40) + '</td><td>' + t.cat + '</td><td style="text-align:right">' + fmt(t.value) + '</td></tr>'; }).join('');
+    return '<h1>Relatório · ' + MONTHS[+mk.slice(5, 7) - 1] + ' ' + mk.slice(0, 4) + '</h1>' +
+      '<p>Entradas: <b>' + fmt(cur.tin) + '</b> · Saídas: <b>' + fmt(cur.tout) + '</b> · Saldo: <b>' + fmt(saldo) + '</b> (' + (cur.tin > 0 ? Math.round(saldo / cur.tin * 100) : 0) + '%)</p>' +
+      '<h2>Por categoria</h2><table>' + rows + '</table>' +
+      '<h2>Maiores gastos</h2><table><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th></tr>' + trows + '</table>' +
+      '<p style="margin-top:24px;font-size:11px;color:#888;">Controle Financeiro · @lucasfigueiredoam</p>';
+  }
+  function printReport() {
+    var pr = $('printReport'); if (!pr) return;
+    pr.innerHTML = monthReportHtml();
+    document.body.classList.add('printing');
+    window.print();
   }
 
   function renderGoal() {
@@ -1296,12 +1583,13 @@ var SEED_ENC = null; /*__SEED__*/
     var val = parseFloat($('fVal').value);
     var date = $('fDate').value;
     if (!desc || !val || val <= 0 || !date) return;
+    var isRef = $('fRefund') && $('fRefund').checked;
     state.tx.push({
-      id: state.seq++, type: $('fType').value, desc: desc, cat: $('fCat').value,
-      account: $('fAcc').value, date: date, value: Math.round(val * 100) / 100, src: 'm'
+      id: state.seq++, type: isRef ? 'in' : $('fType').value, desc: desc, cat: $('fCat').value,
+      account: $('fAcc').value, date: date, value: Math.round(val * 100) / 100, src: 'm', refund: isRef ? true : undefined
     });
     save();
-    $('fDesc').value = ''; $('fVal').value = '';
+    $('fDesc').value = ''; $('fVal').value = ''; if ($('fRefund')) $('fRefund').checked = false;
     render(); toast('Lançamento adicionado');
   });
 
@@ -1362,7 +1650,8 @@ var SEED_ENC = null; /*__SEED__*/
 
   // ---------- assinaturas ----------
   function renderSubs() {
-    var list = state.subs.filter(function (s) { return !accSel || s.account === accSel; });
+    var curYm = todayIso().slice(0, 7);
+    var list = state.subs.filter(function (s) { return (!accSel || s.account === accSel) && subActive(s, curYm); });
     var sm = 0; list.forEach(function (s) { sm += s.valor; });
     $('subsCount').textContent = list.length;
     $('subsMes').textContent = fmt(sm);
@@ -1993,11 +2282,22 @@ var SEED_ENC = null; /*__SEED__*/
       state.cards.forEach(function (c) { if (c.manual > 0) localManual[c.nome] = c.manual; });
       var merged = incoming;
       merged.tx = incoming.tx.concat(manuais);
-      // orçamentos: sempre vêm do seed (fonte da verdade), não preserva teto local antigo
-      if (Object.keys(state.goals).length) merged.goals = state.goals;
-      merged.receivables = state.receivables.length ? state.receivables : incoming.receivables;
-      merged.wishlist = state.wishlist.length ? state.wishlist : incoming.wishlist;
-      // investimentos: o valor vem sempre do seed (fonte da verdade), não preserva valor local antigo
+      // REGRA DE MERGE (padronizada):
+      //  - budgets e inv: o SEED é a fonte da verdade (vêm da análise) e sobrescrevem o local.
+      //  - goals (meta de poupança): PRESERVA o valor definido no aparelho, se houver.
+      //  - listas do usuário (receivables, wishlist, metas): ADITIVO com dedup — nunca apaga o que já existe no aparelho, só acrescenta o que é novo no seed.
+      if (Object.keys(state.goals).length) merged.goals = state.goals; // preserva sua meta local
+      function mergeList(local, inc, keyFn) {
+        var out = (local || []).slice();
+        (inc || []).forEach(function (it) { if (!out.some(function (x) { return keyFn(x) === keyFn(it); })) out.push(it); });
+        return out;
+      }
+      merged.receivables = mergeList(state.receivables, incoming.receivables, function (r) { return r.nome + '|' + r.valor; });
+      merged.wishlist = mergeList(state.wishlist, incoming.wishlist, function (w) { return w.item; });
+      merged.metas = mergeList(state.metas, incoming.metas, function (m) { return m.nome; });
+      // migração: item que virou Meta sai da lista de desejos (evita duplicar nas duas listas)
+      merged.wishlist = merged.wishlist.filter(function (w) { return !merged.metas.some(function (m) { return m.nome === w.item; }); });
+      // cards.manual: preserva o valor de fatura real digitado no aparelho
       merged.cards.forEach(function (c) { if (localManual[c.nome] != null) c.manual = localManual[c.nome]; });
       merged.seq = Math.max(incoming.seq, state.seq) + 1;
       state = merged;
