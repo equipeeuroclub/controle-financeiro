@@ -1969,16 +1969,47 @@ var SEED_ENC = null; /*__SEED__*/
   });
 
   // ---------- backup ----------
+  function fileDownload(name, content, type) {
+    try {
+      var blob = new Blob([content], { type: type || 'application/octet-stream' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { if (a.parentNode) a.parentNode.removeChild(a); URL.revokeObjectURL(url); }, 4000);
+      return true;
+    } catch (e) { return false; }
+  }
+  // modal com o conteúdo + Baixar/Copiar — robusto no iPhone e em navegador que bloqueia download automático
   function download(name, content, type) {
-    var blob = new Blob([content], { type: type });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name; a.click();
-    URL.revokeObjectURL(a.href);
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:var(--surface);border:1px solid var(--line);border-radius:12px;max-width:560px;width:100%;max-height:85vh;display:flex;flex-direction:column;gap:10px;padding:16px;';
+    var h = document.createElement('div'); h.textContent = name; h.style.cssText = 'font-weight:700;';
+    var p = document.createElement('div'); p.textContent = 'Toque em Baixar pra salvar o arquivo. Se não baixar (comum no iPhone), toque em Copiar tudo e cole num app de Notas ou Arquivos.'; p.style.cssText = 'font-size:.8rem;color:var(--muted);';
+    var ta = document.createElement('textarea'); ta.readOnly = true; ta.value = content;
+    ta.style.cssText = 'flex:1;min-height:160px;width:100%;box-sizing:border-box;background:var(--surface-2);color:inherit;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:monospace;font-size:.72rem;white-space:pre;';
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    var bDl = document.createElement('button'); bDl.className = 'btn primary'; bDl.type = 'button'; bDl.textContent = 'Baixar arquivo';
+    bDl.addEventListener('click', function () { if (!fileDownload(name, content, type)) toast('Não deu pra baixar; use Copiar tudo'); });
+    var bCp = document.createElement('button'); bCp.className = 'btn'; bCp.type = 'button'; bCp.textContent = 'Copiar tudo';
+    bCp.addEventListener('click', function () {
+      ta.focus(); ta.select();
+      function ok() { toast('Backup copiado — cole e salve'); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(content).then(ok, function () { try { document.execCommand('copy'); ok(); } catch (e) { } });
+      else { try { document.execCommand('copy'); ok(); } catch (e) { } }
+    });
+    var bX = document.createElement('button'); bX.className = 'btn'; bX.type = 'button'; bX.textContent = 'Fechar';
+    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    bX.addEventListener('click', close);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    row.appendChild(bDl); row.appendChild(bCp); row.appendChild(bX);
+    box.appendChild(h); box.appendChild(p); box.appendChild(ta); box.appendChild(row);
+    ov.appendChild(box); document.body.appendChild(ov);
   }
   $('exportJson').addEventListener('click', function () {
     download('controle-financeiro-backup.json', JSON.stringify(state, null, 2), 'application/json');
-    toast('Backup exportado');
   });
   $('exportCsv').addEventListener('click', function () {
     var rows = [['data', 'tipo', 'descricao', 'categoria', 'conta', 'valor']];
@@ -1986,7 +2017,6 @@ var SEED_ENC = null; /*__SEED__*/
       rows.push([t.date, t.type === 'in' ? 'entrada' : 'saida', '"' + t.desc.replace(/"/g, '""') + '"', t.cat, t.account, String(t.value).replace('.', ',')]);
     });
     download('controle-financeiro.csv', '﻿' + rows.map(function (r) { return r.join(';'); }).join('\n'), 'text/csv');
-    toast('CSV exportado');
   });
   $('importJson').addEventListener('click', function () { $('importFile').click(); });
   $('importFile').addEventListener('change', function (e) {
