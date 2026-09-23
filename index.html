@@ -698,7 +698,7 @@
     <section class="card">
       <h2>Novo parcelamento</h2>
       <form class="form-grid" id="parcForm">
-        <div class="field" style="grid-column: span 2;"><label for="pDesc">Descrição</label><input id="pDesc" type="text" placeholder="Ex.: Shopee - fone" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="pDesc">Descrição</label><input id="pDesc" type="text" placeholder="Ex.: fone de ouvido" required></div>
         <div class="field"><label for="pVal">Valor da parcela</label><input id="pVal" type="number" step="0.01" min="0.01" required></div>
         <div class="field"><label for="pN">Nº de parcelas</label><input id="pN" type="number" min="1" step="1" required></div>
         <div class="field"><label for="pPagas">Já pagas</label><input id="pPagas" type="number" min="0" step="1" value="0"></div>
@@ -724,7 +724,7 @@
     <section class="card">
       <h2>Nova assinatura</h2>
       <form class="form-grid" id="subForm">
-        <div class="field" style="grid-column: span 2;"><label for="sNome">Serviço</label><input id="sNome" type="text" placeholder="Ex.: TotalPass, Netflix" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="sNome">Serviço</label><input id="sNome" type="text" placeholder="Ex.: Netflix, academia" required></div>
         <div class="field"><label for="sVal">Valor / mês</label><input id="sVal" type="number" step="0.01" min="0.01" required></div>
         <div class="field"><label for="sDia">Dia da cobrança</label><input id="sDia" type="number" min="1" max="31" step="1" required></div>
         <div class="field"><label for="sAcc">Conta / cartão</label><select id="sAcc"></select></div>
@@ -834,9 +834,9 @@
     <section class="card">
       <h2>A receber (quem te deve)</h2>
       <form class="form-grid" id="recvForm">
-        <div class="field" style="grid-column: span 2;"><label for="rNome">Quem</label><input id="rNome" type="text" placeholder="Ex.: Josué (Pitchula)" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="rNome">Quem</label><input id="rNome" type="text" placeholder="Ex.: João" required></div>
         <div class="field"><label for="rVal">Valor</label><input id="rVal" type="number" step="0.01" min="0.01" required></div>
-        <div class="field" style="grid-column: span 2;"><label for="rDesc">Referente a</label><input id="rDesc" type="text" placeholder="Ex.: ingresso + bebidas"></div>
+        <div class="field" style="grid-column: span 2;"><label for="rDesc">Referente a</label><input id="rDesc" type="text" placeholder="Ex.: ingresso do show"></div>
         <div><button class="btn primary" type="submit">Adicionar</button></div>
       </form>
       <div id="recvList" style="margin-top:12px;"></div>
@@ -846,7 +846,7 @@
     <section class="card">
       <h2>Metas (objetivos)</h2>
       <form class="form-grid" id="metaForm">
-        <div class="field" style="grid-column: span 2;"><label for="mNome">Meta</label><input id="mNome" type="text" placeholder="Ex.: Tirar passaporte" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="mNome">Meta</label><input id="mNome" type="text" placeholder="Ex.: pagar o IPVA" required></div>
         <div class="field"><label for="mAlvo">Custo estimado</label><input id="mAlvo" type="number" step="0.01" min="0" placeholder="0,00"></div>
         <div class="field"><label for="mPrazo">Prazo (opcional)</label><input id="mPrazo" type="month"></div>
         <div><button class="btn primary" type="submit">Adicionar meta</button></div>
@@ -858,7 +858,7 @@
     <section class="card">
       <h2>Lista de compras / desejos</h2>
       <form class="form-grid" id="wishForm">
-        <div class="field" style="grid-column: span 2;"><label for="wItem">Item</label><input id="wItem" type="text" placeholder="Ex.: Flores pra mãe" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="wItem">Item</label><input id="wItem" type="text" placeholder="Ex.: presente de aniversário" required></div>
         <div class="field"><label for="wVal">Valor estimado</label><input id="wVal" type="number" step="0.01" min="0" placeholder="0,00"></div>
         <div><button class="btn primary" type="submit">Adicionar</button></div>
       </form>
