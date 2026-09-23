@@ -762,7 +762,7 @@
     <section class="card">
       <h2>Novo investimento</h2>
       <form class="form-grid" id="invForm">
-        <div class="field" style="grid-column: span 2;"><label for="iNome">Nome / ativo</label><input id="iNome" type="text" placeholder="Ex.: CDB C6 110%, BTC, MXRF11" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="iNome">Nome / ativo</label><input id="iNome" type="text" placeholder="Ex.: CDB 110%, Tesouro Selic, MXRF11" required></div>
         <div class="field"><label for="iTipo">Tipo</label>
           <select id="iTipo">
             <option>Renda fixa</option><option>Tesouro</option><option>Ações</option>
@@ -809,9 +809,9 @@
     <section class="card">
       <h2>Novo cartão</h2>
       <form class="form-grid" id="cardForm">
-        <div class="field" style="grid-column: span 2;"><label for="cNome">Nome do cartão</label><input id="cNome" type="text" placeholder="Ex.: Nubank Gold, C6 Bandeirado" required></div>
+        <div class="field" style="grid-column: span 2;"><label for="cNome">Nome do cartão</label><input id="cNome" type="text" placeholder="Ex.: cartão principal, cartão da loja" required></div>
         <div class="field"><label for="cBanco">Banco</label>
-          <select id="cBanco"><option>Nubank</option><option>C6 Bank</option><option>Outro</option></select></div>
+          <input id="cBanco" type="text" placeholder="Ex.: Itaú" autocomplete="off"></div>
         <div class="field"><label for="cLimite">Limite total</label><input id="cLimite" type="number" step="1" min="0" required></div>
         <div class="field"><label for="cFech">Dia fechamento</label><input id="cFech" type="number" min="1" max="31"></div>
         <div class="field"><label for="cVenc">Dia vencimento</label><input id="cVenc" type="number" min="1" max="31"></div>
@@ -976,11 +976,11 @@ var SEED_ENC = null; /*__SEED__*/
 <script>
 (function () {
   var KEY = 'financas-dash-v1';
-  var CATS_OUT = ['Moradia', 'Alimentação', 'Lanches', 'Transporte', 'Transporte lazer', 'Saúde', 'Psicólogo', 'Lazer', 'Viagem', 'Roupas', 'Presentes', 'Assinaturas', 'Educação', 'Compras', 'Imprevistos', 'Cuidados pessoais', 'Investimento Pessoal', 'Projetos', 'Negócios', 'Impostos', 'Jogos e apostas', 'Fraude/Roubo', 'Dívidas', 'Investimentos', 'Outros'];
+  var CATS_OUT = ['Moradia', 'Alimentação', 'Lanches', 'Transporte', 'Transporte lazer', 'Saúde', 'Lazer', 'Viagem', 'Roupas', 'Presentes', 'Assinaturas', 'Educação', 'Compras', 'Imprevistos', 'Cuidados pessoais', 'Negócios', 'Impostos', 'Dívidas', 'Investimentos', 'Outros'];
   var CATS_IN = ['Salário', 'Freelas', 'Vendas online', 'Recebimentos PIX', 'Negócios', 'Rendimentos', 'Família', 'Outros'];
-  var BASE_ACCOUNTS = ['C6 Bank', 'Nubank', 'Nubank PJ', 'Carteira', 'Outro'];
+  var BASE_ACCOUNTS = ['Conta corrente', 'Poupança', 'Carteira', 'Vale benefício', 'Outro'];
   // categorias neutras: dinheiro que muda de lugar, não renda nem gasto
-  var NEUTRAL = { 'Transferências internas': 1, 'Pagamento de fatura': 1, 'Empréstimos': 1, 'Reembolsos': 1, 'Repasses de terceiros': 1, 'Revenda': 1, 'Projeto Apostas': 1 };
+  var NEUTRAL = { 'Transferências internas': 1, 'Pagamento de fatura': 1, 'Empréstimos': 1, 'Reembolsos': 1, 'Repasses de terceiros': 1, 'Revenda': 1 };
   var DATA_START = '0000-00'; // sem piso: todo mes lancado entra nas medias
   function isNeutral(t) { return !!NEUTRAL[t.cat]; }
   function isInvest(t) { return t.cat === 'Investimentos'; }
@@ -2025,7 +2025,7 @@ var SEED_ENC = null; /*__SEED__*/
     Object.keys(spent).forEach(function (c) { setc[c] = 1; });
     Object.keys(mb).forEach(function (c) { if (!HIDE[c]) setc[c] = 1; });          // mostra categorias do plano mesmo zeradas
     Object.keys(HOME_BUDGET).forEach(function (c) { if (!HIDE[c]) setc[c] = 1; });
-    var ORDER = ['Moradia', 'Alimentação', 'Lanches', 'Transporte', 'Lazer', 'Transporte lazer', 'Saúde', 'Psicólogo', 'Viagem', 'Roupas', 'Presentes', 'Cuidados pessoais', 'Compras', 'Educação', 'Imprevistos', 'Impostos', 'Dívidas', 'Outros'];
+    var ORDER = ['Moradia', 'Alimentação', 'Lanches', 'Transporte', 'Lazer', 'Transporte lazer', 'Saúde', 'Viagem', 'Roupas', 'Presentes', 'Cuidados pessoais', 'Compras', 'Educação', 'Imprevistos', 'Impostos', 'Dívidas', 'Outros'];
     var cats = Object.keys(setc).sort(function (a, b) {
       var ia = ORDER.indexOf(a); if (ia < 0) ia = 999;
       var ib = ORDER.indexOf(b); if (ib < 0) ib = 999;
@@ -2302,7 +2302,7 @@ var SEED_ENC = null; /*__SEED__*/
       var su = document.createElement('div'); su.className = 'i-sub'; su.textContent = '~' + fmt(x.valor) + '/mês · visto em ' + x.meses + ' meses · ' + x.cat;
       left.appendChild(ti); left.appendChild(su);
       var add = document.createElement('button'); add.className = 'btn'; add.type = 'button'; add.textContent = 'cadastrar';
-      add.addEventListener('click', function () { state.subs.push({ id: state.seq++, nome: x.nome, valor: Math.round(x.valor * 100) / 100, dia: 1, account: 'C6 Bank' }); save(); render(); toast('Assinatura cadastrada'); });
+      add.addEventListener('click', function () { state.subs.push({ id: state.seq++, nome: x.nome, valor: Math.round(x.valor * 100) / 100, dia: 1, account: BASE_ACCOUNTS[0] }); save(); render(); toast('Assinatura cadastrada'); });
       var rt = document.createElement('div'); rt.style.display = 'flex'; rt.style.gap = '6px'; rt.style.alignItems = 'center'; rt.appendChild(add);
       head.appendChild(left); head.appendChild(rt); it.appendChild(head); box.appendChild(it);
     });
@@ -2637,7 +2637,7 @@ var SEED_ENC = null; /*__SEED__*/
     state.tx.forEach(function (x) {
       if (x.cat === t.cat && x.type === 'out' && x.date.slice(0, 7) === t.date.slice(0, 7)) totalCat += x.value;
     });
-    toast(t.desc + ' · ' + fmt(t.value) + ' · ' + t.cat + ' fecha o mes em ' + fmt(totalCat),
+    toast(t.desc + ' · ' + fmt(t.value) + ' · ' + t.cat + ' fecha o mês em ' + fmt(totalCat),
       'Desfazer', function () { excluirTxSilencioso(t); });
     return t;
   }
@@ -3096,7 +3096,7 @@ var SEED_ENC = null; /*__SEED__*/
     var nome = $('cNome').value.trim();
     if (!nome || isNaN(lim)) return;
     state.cards.push({
-      id: state.seq++, nome: nome, banco: $('cBanco').value, limite: lim,
+      id: state.seq++, nome: nome, banco: ($('cBanco').value || '').trim() || 'Cartão', limite: lim,
       fech: parseInt($('cFech').value, 10) || null, venc: parseInt($('cVenc').value, 10) || null
     });
     save(); $('cNome').value = ''; $('cLimite').value = ''; $('cFech').value = ''; $('cVenc').value = '';
