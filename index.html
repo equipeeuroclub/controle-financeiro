@@ -162,6 +162,12 @@
   .anchor .a-sub { font-size: 0.88rem; color: var(--ink-2); margin-top: var(--s2); }
   .anchor .a-sub b { color: var(--ink); font-variant-numeric: tabular-nums; }
   .anchor.done .a-value { color: var(--pos); }
+  /* o dia a dia passou do livre: estouro de verdade */
+  .anchor .a-sub .a-passou { color: var(--neg); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .anchor .a-sub .a-passou b { color: var(--neg); }
+  /* aviso da meta de guardar: alerta, nao estouro */
+  .anchor .a-sub .a-meta { color: var(--warning); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .anchor .a-sub .a-meta b { color: var(--warning); }
   .anchor.warn { border-color: var(--warning); }
   .anchor.warn .a-value { color: var(--warning); }
   .anchor.bad { border-color: var(--neg); }
@@ -1315,6 +1321,81 @@ var SEED_ENC = null; /*__SEED__*/
     });
     return r;
   }
+  // ---- primeiro me pago ----------------------------------------------------
+  // 1) uma fatia da renda sai direto pro investimento, antes de qualquer conta;
+  // 2) do que resta, sai o custo fixo (aluguel + assinaturas + parcelas do mes);
+  // 3) o que sobra e o LIVRE: o numero real, sem corte, so pra voce saber o que tem.
+  // Dentro do livre vai um AVISO (nao uma trava) mirando fechar o mes guardando
+  // META_GUARDAR da renda:  guardado = renda - fixo - gasto do dia a dia.
+  // Para dar a meta, o gasto tem que parar em  livre - (META_GUARDAR - APORTE_INICIAL) x renda.
+  var APORTE_INICIAL = 0.20;   // sai primeiro, sempre
+  var META_GUARDAR   = 0.40;   // alvo do mes fechado, sobre a renda
+
+  // Gasto que é obrigatório todo mês (mercado, transporte...) pode entrar no fixo
+  // por uma média, em vez de disputar espaço no dia a dia. Preencha se quiser:
+  //   var FIXO_MEDIO = { 'Alimentação': 600, 'Transporte': 400 };
+  // Vale o maior valor entre a média e o gasto real do mês.
+  var FIXO_MEDIO = {};
+
+  function essencialDoMes(ym) {
+    var real = {}, out = {}, tot = 0;
+    Object.keys(FIXO_MEDIO).forEach(function (c) { real[c] = 0; });
+    state.tx.forEach(function (t) {
+      if (t.date.slice(0, 7) !== ym) return;
+      if (accSel && t.account !== accSel) return;
+      if (isNeutral(t) || isInvest(t) || isParcela(t)) return;
+      if (real[t.cat] == null) return;
+      if (isRefund(t)) { real[t.cat] -= t.value; return; }
+      if (t.type !== 'out') return;
+      real[t.cat] += t.value;
+    });
+    Object.keys(FIXO_MEDIO).forEach(function (c) {
+      out[c] = Math.max(FIXO_MEDIO[c], real[c]);
+      tot += out[c];
+    });
+    return { por: out, real: real, total: accSel ? 0 : tot };
+  }
+  function custoFixoDoMes(ym) {
+    var mor = 0, parc = 0;
+    state.tx.forEach(function (t) {
+      if (t.type !== 'out' || t.date.slice(0, 7) !== ym) return;
+      if (accSel && t.account !== accSel) return;
+      if (isNeutral(t) || isInvest(t)) return;
+      if (isParcela(t)) { parc += t.value; return; }
+      if (t.cat === 'Moradia') mor += t.value;
+    });
+    if (!mor && !accSel) mor = rentForMonth(ym) || recurringRent();
+    var ass = accSel ? 0 : subsForMonth(ym);
+    var ess = essencialDoMes(ym);
+    return { aluguel: mor, assinaturas: ass, parcelas: parc, essencial: ess.total,
+             essencialPor: ess.por, total: mor + ass + parc + ess.total };
+  }
+  function gastoVariavelDoMes(ym) {
+    var g = 0;
+    state.tx.forEach(function (t) {
+      if (t.date.slice(0, 7) !== ym) return;
+      if (accSel && t.account !== accSel) return;
+      if (isNeutral(t) || isInvest(t) || isParcela(t)) return;
+      if (isRefund(t)) { g -= t.value; return; }
+      if (t.type !== 'out') return;
+      if (t.cat === 'Assinaturas' || t.cat === 'Moradia') return;
+      if (!accSel && FIXO_MEDIO[t.cat] != null) return; // ja reservado no fixo
+      g += t.value;
+    });
+    return g;
+  }
+  function planoDoMes(ym) {
+    var renda = rendaDoMes(ym);
+    var fx = custoFixoDoMes(ym);
+    var aporte = renda * APORTE_INICIAL;
+    var livre = renda - aporte - fx.total;
+    var metaGasto = livre - renda * (META_GUARDAR - APORTE_INICIAL);
+    return { renda: renda, fx: fx, aporte: aporte,
+             livre: Math.max(0, livre), livreBruto: livre,
+             metaGasto: metaGasto, metaViavel: metaGasto > 0,
+             alvoGuardar: renda * META_GUARDAR };
+  }
+
   function orcamentoTotal() {
     var b = state.budgets['default'] || {}, t = 0;
     Object.keys(b).forEach(function (k) { t += (+b[k] || 0); });
@@ -1325,36 +1406,64 @@ var SEED_ENC = null; /*__SEED__*/
   function renderAnchor() {
     var card = $('anchorCard'); if (!card) return;
     var ym = refMonthKey(), ehCorrente = (ym === mesCorrente());
-    var gasto = gastoDoMes(ym), orc = orcamentoTotal(), renda = rendaDoMes(ym);
-    var teto = orc > 0 ? orc : renda;
-    var comp = ehCorrente ? comprometidoRestante(ym) : 0;
-    var livre = teto - gasto - comp;
+    var gasto = gastoDoMes(ym);
+    var p = planoDoMes(ym), renda = p.renda, fx = p.fx;
+    var gastoV = gastoVariavelDoMes(ym);
+    var sobraLivre = p.livre - gastoV;
+    var guardado = renda - fx.total - gastoV;   // o que de fato sobra pra investir
+    var pctG = renda > 0 ? guardado / renda : 0;
     var dias = diasNoMes(ym), hoje = ehCorrente ? diaDeHoje() : dias;
     var restam = Math.max(1, dias - hoje + 1);
+    var pctMeta = Math.round(META_GUARDAR * 100);
+    var temLivre = renda > 0 && p.livre > 0;
 
     var partes = [], valor, rotulo;
     card.className = 'anchor';
 
     if (ehCorrente) {
-      // mês aberto: o número que importa é quanto do ORÇAMENTO ainda cabe
-      rotulo = teto > 0 ? 'Livre pra gastar até o fim do mês' : 'Saldo do mês até agora';
-      valor = teto > 0 ? livre : (renda - gasto);
-      if (teto > 0 && livre > 0) partes.push('<b>' + fmt(livre / restam) + '</b> por dia nos ' + restam + ' dias que faltam');
-      if (teto > 0) partes.push('gastou ' + fmt(gasto) + ' de ' + fmt(teto) + ' de orçamento');
-      else partes.push('entrou ' + fmt(renda) + ' · gastou ' + fmt(gasto));
-      if (comp > 0) partes.push(fmt(comp) + ' já tem dono (assinatura e parcela que ainda caem)');
-      if (teto > 0) {
-        var proj = hoje > 0 ? (gasto / hoje) * dias : gasto;
-        if (livre < 0) card.classList.add('bad');
-        else if (proj > teto) card.classList.add('warn');
+      rotulo = temLivre ? 'Livre pra gastar até o fim do mês'
+             : (renda > 0 ? 'O fixo deste mês já comeu a renda' : 'Ainda não entrou renda este mês');
+      valor = temLivre ? sobraLivre : -gastoV;
+
+      if (temLivre && sobraLivre > 0) {
+        partes.push('<b>' + fmt(sobraLivre / restam) + '</b> por dia nos ' + restam + ' dias que faltam');
+      }
+      if (temLivre && sobraLivre < 0) {
+        partes.push('<span class="a-passou">passou <b>' + fmt(-sobraLivre) + '</b> do livre de ' + fmt(p.livre) + '</span>');
+      }
+      if (temLivre) {
+        if (!p.metaViavel) {
+          partes.push('<span class="a-meta">mês curto: nem gastando zero dá pra guardar ' + pctMeta + '%</span>');
+        } else if (gastoV > p.metaGasto) {
+          partes.push('<span class="a-meta">passou <b>' + fmt(gastoV - p.metaGasto) + '</b> da meta de ' +
+                      fmt(p.metaGasto) + ' &middot; fecha guardando ' + Math.round(pctG * 100) + '% em vez de ' + pctMeta + '%</span>');
+        } else {
+          partes.push('meta: gastar até <b>' + fmt(p.metaGasto) + '</b> pra guardar ' + pctMeta + '% (' + fmt(p.alvoGuardar) + ')');
+        }
+      }
+      partes.push('entrou ' + fmt(renda) + ' &middot; investe ' + fmt(p.aporte) + ' (' + Math.round(APORTE_INICIAL * 100) +
+        '%) &middot; fixo ' + fmt(fx.total) +
+        (fx.essencial ? ' (com ' + fmt(fx.essencial) + ' de gasto obrigatório)' : ''));
+
+      if (!temLivre) { card.classList.add('warn'); }
+      else if (sobraLivre < 0) { card.classList.add('bad'); }
+      else {
+        var proj = hoje > 0 ? (gastoV / hoje) * dias : gastoV;
+        if (p.metaViavel && (gastoV > p.metaGasto || proj > p.metaGasto)) card.classList.add('warn');
         else card.classList.add('done');
       }
     } else {
-      // mês fechado: o número que importa é DINHEIRO que sobrou, não orçamento
       rotulo = 'Sobrou em ' + MONTHS[+ym.slice(5, 7) - 1];
       valor = renda - gasto;
-      partes.push('entrou <b>' + fmt(renda) + '</b> · gastou <b>' + fmt(gasto) + '</b>');
-      if (teto > 0) partes.push('usou ' + Math.round(gasto / teto * 100) + '% do orçamento de ' + fmt(teto));
+      partes.push('entrou <b>' + fmt(renda) + '</b> &middot; gastou <b>' + fmt(gasto) + '</b>');
+      if (renda > 0) {
+        if (pctG >= META_GUARDAR) {
+          partes.push('guardou <b>' + fmt(guardado) + '</b> = ' + Math.round(pctG * 100) + '% da renda (bateu a meta de ' + pctMeta + '%)');
+        } else {
+          partes.push('<span class="a-meta">guardou <b>' + fmt(guardado) + '</b> = ' + Math.round(pctG * 100) +
+                      '% da renda &middot; meta era ' + pctMeta + '% (' + fmt(p.alvoGuardar) + ')</span>');
+        }
+      }
       card.classList.add(valor >= 0 ? 'done' : 'bad');
     }
 
