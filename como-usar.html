@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Passo a passo para usar o Controle Financeiro: lançar um gasto, ler os gráficos do mês e guardar backup.">
+<meta name="theme-color" content="#0A0A0A">
+<style>
+  :root { color-scheme: light dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Guia do Controle Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4EE;
+    --ink: #0A0A0A;
+    --ink-soft: #2E312C;
+    --muted: #555956;
+    --line: #E0E3D8;
+    --line-soft: #EDEFE7;
+    --accent: #5F6905;
+    --accent-solid: #BACD0B;
+    --on-solid: #0A0A0A;
+    --accent-wash: #F3F6E0;
+    --accent-edge: #D3DE8A;
+
+    /* maquetes do app: sempre escuras, porque o app só existe no escuro */
+    --app-bg: #0A0B0A;
+    --app-surface: #131614;
+    --app-surface-2: #1A1E1B;
+    --app-ink: #F1F4EF;
+    --app-ink-2: #C4CBC2;
+    --app-muted: #949C92;
+    --app-line: #262C27;
+    --app-line-2: #333B34;
+    --app-accent: #BACD0B;
+    --app-pos: #A9C42E;
+    --app-neg: #E5645A;
+    --app-warn: #D9A83E;
+    --c1: #7FA8D9; --c2: #C88BC4; --c3: #E0A66B; --c4: #6FB8A8; --c5: #C98A8A;
+
+    --f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --f-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0A0A0A;
+      --surface: #1C1C1C;
+      --surface-2: #242520;
+      --ink: #F4F7EF;
+      --ink-soft: #DCE0D6;
+      --muted: #A3A89E;
+      --line: #2E302A;
+      --line-soft: #242520;
+      --accent: #BACD0B;
+      --accent-wash: #1F2408;
+      --accent-edge: #3E470E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0A0A0A;
+    --surface: #1C1C1C;
+    --surface-2: #242520;
+    --ink: #F4F7EF;
+    --ink-soft: #DCE0D6;
+    --muted: #A3A89E;
+    --line: #2E302A;
+    --line-soft: #242520;
+    --accent: #BACD0B;
+    --accent-wash: #1F2408;
+    --accent-edge: #3E470E;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 56px;
+  }
+  p { margin: 0 0 14px; }
+  b, strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  /* ---------- abertura ---------- */
+  .hero { display: flex; flex-direction: column; gap: 18px; }
+  .marca {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .marca .selo {
+    display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent-solid); color: var(--on-solid);
+    font-family: var(--f-body); font-weight: 600; font-size: 0.8rem; letter-spacing: 0;
+  }
+  h1 {
+    font-family: var(--f-display); font-weight: 600;
+    font-size: clamp(2rem, 7vw, 3rem); line-height: 1.05; letter-spacing: -0.02em;
+    margin: 0; text-wrap: balance;
+  }
+  .lead { font-size: 1.06rem; color: var(--ink-soft); max-width: 60ch; margin: 0; }
+  .cta-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 4px; }
+  .cta {
+    display: inline-block; padding: 13px 22px; border-radius: 10px;
+    background: var(--accent-solid); color: var(--on-solid);
+    font-weight: 600; font-size: 1rem; text-decoration: none;
+    border: 1px solid #A5B60A;
+  }
+  .cta:hover { filter: brightness(1.06); }
+  .cta-nota { font-size: 0.86rem; color: var(--muted); }
+  .url {
+    font-family: var(--f-mono); font-size: 0.82rem; color: var(--muted);
+    word-break: break-all;
+  }
+
+  hr.regra { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
+
+  /* ---------- passos ---------- */
+  .passo { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 0 18px; margin-bottom: 40px; }
+  .passo .num {
+    font-family: var(--f-mono); font-size: 0.82rem; font-weight: 500;
+    color: var(--accent); padding-top: 6px;
+  }
+  .passo h2 {
+    font-family: var(--f-display); font-weight: 600; font-size: 1.55rem; line-height: 1.2;
+    margin: 0 0 10px; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .passo .corpo { min-width: 0; }
+  h3 {
+    font-family: var(--f-display); font-weight: 600; font-size: 1.28rem;
+    margin: 0 0 12px; letter-spacing: -0.01em;
+  }
+
+  ul.lista { margin: 0 0 14px; padding-left: 20px; }
+  ul.lista li { margin-bottom: 7px; }
+
+  /* ---------- maquetes do app ---------- */
+  .tela {
+    background: var(--app-bg); border: 1px solid var(--app-line); border-radius: 12px;
+    padding: 14px; margin: 18px 0; color: var(--app-ink); overflow: hidden;
+  }
+  .tela-cap {
+    font-family: var(--f-mono); font-size: 0.68rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin: -8px 0 18px;
+  }
+  .t-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .t-mark {
+    display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px;
+    background: var(--app-accent); color: #0A0B0A; font-weight: 700; font-size: 0.72rem;
+  }
+  .t-nome { font-size: 0.86rem; font-weight: 600; }
+  .t-sub { font-size: 0.68rem; color: var(--app-muted); }
+  .t-btn {
+    margin-left: auto; padding: 7px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 600;
+    background: var(--app-accent); color: #0A0B0A; white-space: nowrap;
+  }
+  .t-btn.ghost { background: transparent; color: var(--app-ink-2); border: 1px solid var(--app-line-2); margin-left: 0; font-weight: 500; }
+  .t-card {
+    background: var(--app-surface); border: 1px solid var(--app-line); border-radius: 10px;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .t-label {
+    font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--app-muted); font-family: var(--f-mono);
+  }
+  .t-valor { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .t-nota { font-size: 0.74rem; color: var(--app-muted); margin-top: 4px; }
+  .t-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+  .t-kpi { background: var(--app-surface); border: 1px solid var(--app-line); border-radius: 10px; padding: 11px; }
+  .t-kpi .v { font-size: 1.12rem; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .pos { color: var(--app-pos); } .neg { color: var(--app-neg); } .warn { color: var(--app-warn); }
+
+  /* formulário desenhado */
+  .t-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .t-campo { background: var(--app-surface-2); border: 1px solid var(--app-line-2); border-radius: 8px; padding: 8px 10px; }
+  .t-campo .cl { font-size: 0.62rem; color: var(--app-muted); font-family: var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  .t-campo .cv { font-size: 0.86rem; margin-top: 2px; }
+  .t-campo.full { grid-column: 1 / -1; }
+  .t-submit {
+    grid-column: 1 / -1; text-align: center; padding: 10px; border-radius: 8px;
+    background: var(--app-accent); color: #0A0B0A; font-weight: 600; font-size: 0.86rem;
+  }
+
+  /* gráficos */
+  .g-legenda { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 10px; }
+  .g-item { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; color: var(--app-ink-2); }
+  .g-ponto { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .g-val { color: var(--app-muted); font-variant-numeric: tabular-nums; font-family: var(--f-mono); font-size: 0.72rem; }
+  .svg-box { overflow-x: auto; }
+  .svg-box svg { display: block; max-width: 100%; height: auto; }
+
+  /* barra de orçamento */
+  .orc { margin-top: 12px; }
+  .orc-topo { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--app-ink-2); margin-bottom: 6px; }
+  .orc-trilho { height: 9px; border-radius: 5px; background: var(--app-surface-2); overflow: hidden; }
+  .orc-fita { height: 100%; border-radius: 5px; background: var(--app-warn); }
+
+  /* ---------- aviso ---------- */
+  .aviso {
+    background: var(--accent-wash); border: 1px solid var(--accent-edge);
+    border-radius: 10px; padding: 16px 18px; margin: 18px 0;
+  }
+  .aviso p:last-child { margin-bottom: 0; }
+  .aviso .tit { font-weight: 600; margin-bottom: 6px; }
+
+  /* ---------- abas ---------- */
+  /* 8 abas: duas colunas fecham 4 linhas cheias, sem célula morta */
+  .abas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  @media (max-width: 520px) { .abas { grid-template-columns: minmax(0, 1fr); } }
+  .aba { background: var(--surface); padding: 15px 16px; }
+  .aba h4 { margin: 0 0 5px; font-size: 0.94rem; font-weight: 600; }
+  .aba p { margin: 0; font-size: 0.84rem; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- dicas e faq ---------- */
+  .dicas { display: grid; gap: 12px; }
+  .dica { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .dica .ic {
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px;
+    background: var(--surface-2); border: 1px solid var(--line); font-size: 0.9rem;
+  }
+  .dica p { margin: 0; font-size: 0.92rem; }
+  .dica .t { font-weight: 600; }
+
+  details.q {
+    border-bottom: 1px solid var(--line); padding: 14px 0;
+  }
+  details.q summary {
+    cursor: pointer; font-weight: 600; font-size: 1rem; list-style: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  details.q summary::-webkit-details-marker { display: none; }
+  details.q summary::after { content: "+"; font-family: var(--f-mono); color: var(--accent); font-size: 1.1rem; }
+  details.q[open] summary::after { content: "–"; }
+  details.q .r { margin: 10px 0 0; color: var(--ink-soft); font-size: 0.94rem; }
+
+  .fecho {
+    margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px; justify-content: space-between;
+  }
+  .fecho p { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+  .atalhos { font-family: var(--f-mono); font-size: 0.82rem; }
+  .atalhos .k {
+    display: inline-block; min-width: 22px; text-align: center; padding: 1px 6px; border-radius: 5px;
+    background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-soft); margin-right: 8px;
+  }
+  .atalhos div { margin-bottom: 6px; color: var(--muted); }
+
+  @media (max-width: 560px) {
+    .passo { grid-template-columns: 1fr; gap: 0; }
+    .passo .num { padding-top: 0; margin-bottom: 4px; }
+    .t-form { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="marca"><span class="selo">R$</span> Controle Financeiro</div>
+    <h1>Onde o seu dinheiro está indo</h1>
+    <p class="lead">Um painel de bolso para lançar o que você gasta e ver, no fim do mês, quanto entrou, quanto saiu e o que sobrou. Abre no navegador do celular ou do computador. Sem instalar, sem criar conta, sem senha.</p>
+    <div class="cta-linha">
+      <a class="cta" href="https://equipeeuroclub.github.io/controle-financeiro/" target="_blank" rel="noopener">Abrir o app</a>
+      <span class="cta-nota">De graça, sem limite de uso.</span>
+    </div>
+    <p class="url">equipeeuroclub.github.io/controle-financeiro</p>
+  </div>
+
+  <hr class="regra">
+
+  <div class="passo">
+    <div class="num">01</div>
+    <div class="corpo">
+      <h2>Abra o link e deixe um atalho na tela de início</h2>
+      <p>O app abre já funcionando. Os seus lançamentos ficam salvos no navegador daquele aparelho, então use sempre o mesmo: se começou no Chrome do celular, continue no Chrome do celular.</p>
+      <ul class="lista">
+        <li><b>iPhone, no Safari:</b> botão de compartilhar, depois "Adicionar à Tela de Início".</li>
+        <li><b>Android, no Chrome:</b> menu dos três pontinhos, depois "Adicionar à tela inicial".</li>
+      </ul>
+      <p>Vira um ícone igual ao de qualquer app, e você não precisa caçar o link toda vez.</p>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="num">02</div>
+    <div class="corpo">
+      <h2>Lance o primeiro gasto</h2>
+      <p>No topo tem o botão <b>+ Lançar gasto</b>. No celular, o mesmo botão é o <b>+</b> verde no meio da barra de baixo. Os dois abrem o formulário na aba Transações.</p>
+
+      <div class="tela">
+        <div class="t-top">
+          <div class="t-mark">R$</div>
+          <div>
+            <div class="t-nome">Controle Financeiro</div>
+            <div class="t-sub">controle pessoal · dados neste navegador</div>
+          </div>
+          <div class="t-btn">+ Lançar gasto</div>
+        </div>
+        <div class="t-card" style="margin-bottom:0;">
+          <div class="t-label" style="margin-bottom:10px;">Novo lançamento</div>
+          <div class="t-form">
+            <div class="t-campo"><div class="cl">Tipo</div><div class="cv">Saída</div></div>
+            <div class="t-campo"><div class="cl">Descrição</div><div class="cv">Padaria da esquina</div></div>
+            <div class="t-campo"><div class="cl">Categoria</div><div class="cv">Alimentação</div></div>
+            <div class="t-campo"><div class="cl">Conta</div><div class="cv">Carteira</div></div>
+            <div class="t-campo"><div class="cl">Data</div><div class="cv">hoje</div></div>
+            <div class="t-campo"><div class="cl">Valor</div><div class="cv">18,50</div></div>
+            <div class="t-submit">Adicionar</div>
+          </div>
+        </div>
+      </div>
+      <p class="tela-cap">Exemplo de preenchimento</p>
+
+      <p>Seis campos, cinco segundos. O tipo já vem em Saída, a data já vem hoje, e a conta fica a última que você usou.</p>
+      <p>Duas coisas que fazem diferença no começo: lance no mesmo dia em que gastou, e nas primeiras semanas lance tudo, até o café de 5 reais. Um mês completo é o que mostra para onde o dinheiro está indo de verdade.</p>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="num">03</div>
+    <div class="corpo">
+      <h2>Leia o mês na Visão geral</h2>
+      <p>Assim que tiver alguns lançamentos, a primeira aba responde as perguntas de sempre.</p>
+
+      <div class="tela">
+        <div class="t-card">
+          <div class="t-label">Saldo do mês até agora</div>
+          <div class="t-valor pos">R$ 1.284,00</div>
+          <div class="t-nota">entrou R$ 4.200,00 · gastou R$ 2.916,00</div>
+        </div>
+        <div class="t-kpis">
+          <div class="t-kpi"><div class="t-label">Entradas</div><div class="v pos">R$ 4.200,00</div></div>
+          <div class="t-kpi"><div class="t-label">Saídas</div><div class="v neg">R$ 1.466,00</div><div class="t-nota">só o dia a dia</div></div>
+          <div class="t-kpi"><div class="t-label">Saídas completo</div><div class="v neg">R$ 2.916,00</div><div class="t-nota">com aluguel, assinaturas e parcelas</div></div>
+          <div class="t-kpi"><div class="t-label">Taxa de poupança</div><div class="v">31%</div><div class="t-nota">meta: ≥ 20%</div></div>
+        </div>
+      </div>
+      <p class="tela-cap">Números de exemplo</p>
+
+      <p>A diferença entre as duas linhas de saída é o que costuma confundir. <b>Saídas</b> é o gasto do dia a dia, o que você decide na hora. <b>Saídas completo</b> soma também aluguel, assinaturas e parcelas, que já estavam contratados. A primeira você controla esta semana; a segunda você controla renegociando.</p>
+
+      <h3>Para onde foi o dinheiro</h3>
+      <div class="tela">
+        <div class="t-card" style="margin-bottom:0;">
+          <div class="t-label" style="margin-bottom:6px;">Gastos por categoria · setembro</div>
+          <div class="svg-box">
+            <svg viewBox="0 0 320 200" role="img" aria-label="Gastos por categoria: Moradia 1.450 reais, Alimentação 820, Transporte 310, Lazer 240, Assinaturas 96">
+              <g transform="translate(100,100) rotate(-90)">
+                <circle r="54" cx="0" cy="0" fill="none" stroke="#1A1E1B" stroke-width="26"></circle>
+                <circle r="54" cx="0" cy="0" fill="none" stroke="#7FA8D9" stroke-width="26" stroke-dasharray="167 172.3" stroke-dashoffset="0"></circle>
+                <circle r="54" cx="0" cy="0" fill="none" stroke="#C88BC4" stroke-width="26" stroke-dasharray="93.4 245.9" stroke-dashoffset="-168.7"></circle>
+                <circle r="54" cx="0" cy="0" fill="none" stroke="#E0A66B" stroke-width="26" stroke-dasharray="34.1 305.2" stroke-dashoffset="-264.1"></circle>
+                <circle r="54" cx="0" cy="0" fill="none" stroke="#6FB8A8" stroke-width="26" stroke-dasharray="25.9 313.4" stroke-dashoffset="-300.2"></circle>
+                <circle r="54" cx="0" cy="0" fill="none" stroke="#C98A8A" stroke-width="26" stroke-dasharray="9.2 330.1" stroke-dashoffset="-328.1"></circle>
+              </g>
+              <text x="100" y="95" text-anchor="middle" fill="#F1F4EF" font-family="Inter, sans-serif" font-size="19" font-weight="600">2.916</text>
+              <text x="100" y="113" text-anchor="middle" fill="#949C92" font-family="IBM Plex Mono, monospace" font-size="9" letter-spacing="1">NO MÊS</text>
+
+              <g font-family="Inter, sans-serif" font-size="11">
+                <rect x="180" y="34" width="9" height="9" rx="2.5" fill="#7FA8D9"></rect>
+                <text x="196" y="43" fill="#C4CBC2">Moradia</text>
+                <text x="312" y="43" fill="#949C92" text-anchor="end" font-size="10">1.450</text>
+
+                <rect x="180" y="60" width="9" height="9" rx="2.5" fill="#C88BC4"></rect>
+                <text x="196" y="69" fill="#C4CBC2">Alimentação</text>
+                <text x="312" y="69" fill="#949C92" text-anchor="end" font-size="10">820</text>
+
+                <rect x="180" y="86" width="9" height="9" rx="2.5" fill="#E0A66B"></rect>
+                <text x="196" y="95" fill="#C4CBC2">Transporte</text>
+                <text x="312" y="95" fill="#949C92" text-anchor="end" font-size="10">310</text>
+
+                <rect x="180" y="112" width="9" height="9" rx="2.5" fill="#6FB8A8"></rect>
+                <text x="196" y="121" fill="#C4CBC2">Lazer</text>
+                <text x="312" y="121" fill="#949C92" text-anchor="end" font-size="10">240</text>
+
+                <rect x="180" y="138" width="9" height="9" rx="2.5" fill="#C98A8A"></rect>
+                <text x="196" y="147" fill="#C4CBC2">Assinaturas</text>
+                <text x="312" y="147" fill="#949C92" text-anchor="end" font-size="10">96</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <p class="tela-cap">Números de exemplo</p>
+
+      <h3>O mês contra os anteriores</h3>
+      <div class="tela">
+        <div class="t-card" style="margin-bottom:0;">
+          <div class="t-label" style="margin-bottom:6px;">Fluxo de caixa · últimos 6 meses</div>
+          <div class="svg-box">
+            <svg viewBox="0 0 560 212" role="img" aria-label="Fluxo de caixa dos últimos seis meses, entradas e saídas mês a mês">
+              <g stroke="#262C27" stroke-width="1">
+                <line x1="50" y1="20" x2="550" y2="20"></line>
+                <line x1="50" y1="95" x2="550" y2="95"></line>
+                <line x1="50" y1="170" x2="550" y2="170"></line>
+              </g>
+              <g font-family="IBM Plex Mono, monospace" font-size="9" fill="#949C92" text-anchor="end">
+                <text x="42" y="24">5.000</text>
+                <text x="42" y="99">2.500</text>
+                <text x="42" y="174">0</text>
+              </g>
+
+              <g>
+                <rect x="68"  y="44"    width="22" height="126"  rx="3" fill="#A9C42E"></rect>
+                <rect x="94"  y="77"    width="22" height="93"   rx="3" fill="#E5645A"></rect>
+                <rect x="151" y="44"    width="22" height="126"  rx="3" fill="#A9C42E"></rect>
+                <rect x="177" y="54.2"  width="22" height="115.8" rx="3" fill="#E5645A"></rect>
+                <rect x="235" y="33.5"  width="22" height="136.5" rx="3" fill="#A9C42E"></rect>
+                <rect x="261" y="81.5"  width="22" height="88.5"  rx="3" fill="#E5645A"></rect>
+                <rect x="318" y="44"    width="22" height="126"  rx="3" fill="#A9C42E"></rect>
+                <rect x="344" y="67.4"  width="22" height="102.6" rx="3" fill="#E5645A"></rect>
+                <rect x="401" y="26"    width="22" height="144"  rx="3" fill="#A9C42E"></rect>
+                <rect x="427" y="79.7"  width="22" height="90.3"  rx="3" fill="#E5645A"></rect>
+                <rect x="485" y="44"    width="22" height="126"  rx="3" fill="#A9C42E"></rect>
+                <rect x="511" y="82.5"  width="22" height="87.5"  rx="3" fill="#E5645A"></rect>
+              </g>
+
+              <g font-family="Inter, sans-serif" font-size="11" fill="#949C92" text-anchor="middle">
+                <text x="92"  y="188">abr</text>
+                <text x="175" y="188">mai</text>
+                <text x="259" y="188">jun</text>
+                <text x="342" y="188">jul</text>
+                <text x="425" y="188">ago</text>
+                <text x="509" y="188">set</text>
+              </g>
+            </svg>
+          </div>
+          <div class="g-legenda">
+            <span class="g-item"><span class="g-ponto" style="background:#A9C42E;"></span>entrou</span>
+            <span class="g-item"><span class="g-ponto" style="background:#E5645A;"></span>saiu</span>
+          </div>
+        </div>
+      </div>
+      <p class="tela-cap">Números de exemplo</p>
+
+      <p>É aqui que o app começa a pagar o trabalho de lançar. Um mês solto não diz nada; seis meses lado a lado mostram se o gasto está subindo, e em qual categoria.</p>
+
+      <h3>Orçamento, quando você quiser apertar</h3>
+      <p>Na aba Categorias dá para definir um teto por categoria. A barra avisa antes de estourar, não depois.</p>
+      <div class="tela">
+        <div class="t-card" style="margin-bottom:0;">
+          <div class="t-label">Orçamento mensal por categoria</div>
+          <div class="orc">
+            <div class="orc-topo"><span>Alimentação</span><span class="g-val">820 de 900</span></div>
+            <div class="orc-trilho"><div class="orc-fita" style="width:91%;"></div></div>
+            <div class="t-nota">no ritmo de hoje, fecha o mês em R$ 1.050</div>
+          </div>
+        </div>
+      </div>
+      <p class="tela-cap">Números de exemplo</p>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="num">04</div>
+    <div class="corpo">
+      <h2>Faça backup, este é o passo que ninguém pode pular</h2>
+      <p>Os dados ficam só no navegador do seu aparelho. Isso é bom para privacidade: nada sai dali, nem para mim, nem para um servidor, nem para o Lucas.</p>
+
+      <div class="aviso">
+        <p class="tit">O preço da privacidade</p>
+        <p>Se você limpar os dados do navegador, trocar de celular ou usar aba anônima, os lançamentos somem e não tem como recuperar. O backup é a única cópia.</p>
+      </div>
+
+      <p><b>Para salvar,</b> vá na aba Transações, desça até "Backup dos dados" e toque em <b>Exportar backup (JSON)</b>. O arquivo cai na pasta de downloads. Guarde no Google Drive, ou mande para você mesmo no WhatsApp. Uma vez por mês resolve.</p>
+      <p><b>Para restaurar</b> em um aparelho novo: abra o link, vá no mesmo lugar e toque em <b>Importar backup</b>.</p>
+      <p>Ali do lado tem mais dois botões: <b>Exportar planilha (CSV)</b>, que abre no Excel ou no Google Sheets, e <b>Relatório do mês (PDF)</b>, que gera um resumo para imprimir ou mandar para alguém.</p>
+    </div>
+  </div>
+
+  <hr class="regra">
+
+  <h3>O que tem em cada aba</h3>
+  <div class="abas">
+    <div class="aba"><h4>Visão geral</h4><p>Saldo do mês, entradas e saídas, saúde financeira, gastos por categoria e o fluxo dos últimos 6 meses.</p></div>
+    <div class="aba"><h4>Transações</h4><p>Todos os lançamentos, o formulário de novo lançamento, importação de extrato, lixeira e backup.</p></div>
+    <div class="aba"><h4>Parcelamentos</h4><p>Cadastre a compra parcelada uma vez e o app espalha as parcelas pelos meses. Notebook de 4.000 em 10x de 400: informe o valor da parcela, o total de parcelas e quantas já foram pagas.</p></div>
+    <div class="aba"><h4>Assinaturas</h4><p>Netflix, Spotify, academia, seguro. Cadastre o valor mensal e ele desconta todo mês sozinho. O app ainda sugere assinaturas que encontrou repetidas nos seus lançamentos.</p></div>
+    <div class="aba"><h4>Investimentos</h4><p>Quanto você já aportou, quanto tem hoje e quanto falta para cada meta.</p></div>
+    <div class="aba"><h4>Categorias</h4><p>Ranking de gastos no período, comparação mês a mês e o orçamento por categoria.</p></div>
+    <div class="aba"><h4>Cartões</h4><p>Seus cartões de crédito, com limite e fatura estimada pelos lançamentos.</p></div>
+    <div class="aba"><h4>Planejamento</h4><p>A receber (quem te deve e quanto), metas com valor e prazo, e a lista de desejos.</p></div>
+  </div>
+
+  <hr class="regra">
+
+  <h3>Trazer o extrato do banco de uma vez</h3>
+  <p>Dá para importar o mês inteiro em vez de digitar lançamento por lançamento.</p>
+  <ul class="lista">
+    <li>No app do seu banco, exporte o extrato em <b>CSV</b> ou <b>OFX</b>.</li>
+    <li>No Controle Financeiro, vá em Transações e procure "Importar extrato do banco".</li>
+    <li>Escolha a conta, toque em <b>Importar arquivo (CSV / OFX)</b> e selecione o arquivo.</li>
+  </ul>
+  <p>Se o seu banco não exporta arquivo, copie as linhas do extrato, toque em <b>Colar texto</b>, cole e mande <b>Processar texto</b>. Nos dois caminhos aparece uma prévia com a categoria que o app sugeriu para cada linha, e ele avisa quando acha um lançamento repetido. Você confere e só então confirma.</p>
+
+  <hr class="regra">
+
+  <h3>Coisas que ajudam no dia a dia</h3>
+  <div class="dicas">
+    <div class="dica">
+      <div class="ic">👁</div>
+      <p><span class="t">Esconder os valores.</span> O botão do olho, no canto superior direito, borra todos os números. Serve para abrir o app perto de outras pessoas.</p>
+    </div>
+    <div class="dica">
+      <div class="ic">‹ ›</div>
+      <p><span class="t">Andar pelos meses.</span> As setas ao lado do nome do mês voltam e avançam. No seletor ao lado dá para trocar para semana, ano ou um período específico.</p>
+    </div>
+    <div class="dica">
+      <div class="ic">✎</div>
+      <p><span class="t">Corrigir um lançamento.</span> Toque nele na lista de transações para editar ou apagar.</p>
+    </div>
+    <div class="dica">
+      <div class="ic">↺</div>
+      <p><span class="t">Apagou sem querer.</span> Logo depois aparece um "Desfazer" no rodapé. Se já passou, o lançamento fica 30 dias na Lixeira, dentro da aba Transações.</p>
+    </div>
+    <div class="dica">
+      <div class="ic">✓</div>
+      <p><span class="t">Agenda.</span> O botão Agenda, no topo, guarda lembretes com prazo. Bom para "pagar o IPVA dia 10". Fica só no seu aparelho, como o resto.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:22px;">
+    <p style="font-size:0.9rem; color:var(--muted); margin-bottom:10px;">No computador, o teclado resolve quase tudo:</p>
+    <div class="atalhos">
+      <div><span class="k">n</span> novo lançamento</div>
+      <div><span class="k">/</span> buscar no extrato</div>
+      <div><span class="k">p</span> esconder ou mostrar os valores</div>
+      <div><span class="k">1</span> a <span class="k">8</span> trocar de aba</div>
+      <div><span class="k">?</span> ver a lista inteira</div>
+    </div>
+  </div>
+
+  <hr class="regra">
+
+  <h3>Perguntas rápidas</h3>
+
+  <details class="q">
+    <summary>Preciso pagar alguma coisa?</summary>
+    <p class="r">Não. É de graça, sem limite de lançamentos e sem versão paga escondida.</p>
+  </details>
+  <details class="q">
+    <summary>Alguém vê os meus dados?</summary>
+    <p class="r">Não. Nada sai do seu aparelho. Não existe conta, login nem servidor guardando o que você lança.</p>
+  </details>
+  <details class="q">
+    <summary>Funciona sem internet?</summary>
+    <p class="r">Para abrir o site, você precisa de internet. Depois de aberto, pode continuar lançando mesmo se a conexão cair, porque o salvamento é no próprio aparelho.</p>
+  </details>
+  <details class="q">
+    <summary>Posso usar no celular e no computador?</summary>
+    <p class="r">Pode, mas os dois não conversam entre si: cada aparelho tem a sua lista. Para passar de um para o outro, exporte o backup em um e importe no outro.</p>
+  </details>
+  <details class="q">
+    <summary>E se eu perder tudo?</summary>
+    <p class="r">Com o backup salvo, é só importar e voltar ao ponto em que estava. Sem backup, começa do zero. Por isso o passo 04.</p>
+  </details>
+  <details class="q">
+    <summary>Lancei na categoria errada, estraguei os gráficos?</summary>
+    <p class="r">Não. Toque no lançamento, troque a categoria e tudo se recalcula na hora, inclusive os meses anteriores.</p>
+  </details>
+
+  <div class="fecho">
+    <p>Qualquer dúvida, chama o Lucas.</p>
+    <a class="cta" href="https://equipeeuroclub.github.io/controle-financeiro/" target="_blank" rel="noopener">Abrir o app</a>
+  </div>
+
+</div>
+</body>
+</html>
