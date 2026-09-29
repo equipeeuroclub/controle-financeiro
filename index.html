@@ -461,6 +461,54 @@
     #printReport table { width: 100%; border-collapse: collapse; }
     #printReport td, #printReport th { border-bottom: 1px solid #ccc; padding: 4px 6px; font-size: 11px; text-align: left; }
   }
+  /* ===== trocador de conta em cards ===== */
+  .acc-picker { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; margin-bottom: var(--s3); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .acc-picker::-webkit-scrollbar { display: none; }
+  .acc-chip {
+    display: flex; align-items: center; gap: 8px; flex: 0 0 auto; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 13px; min-width: 118px; transition: border-color .12s ease, background-color .12s ease;
+  }
+  .acc-chip:hover { border-color: var(--line-2); }
+  .acc-chip.on { border-color: var(--accent); background: var(--accent-soft); }
+  .acc-chip .ac-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+  .acc-chip .ac-name { font-size: 0.76rem; color: var(--muted); white-space: nowrap; }
+  .acc-chip.on .ac-name { color: var(--ink-2); }
+  .acc-chip .ac-val { font-size: 0.86rem; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ===== metas em anel ===== */
+  .meta-rings { display: flex; align-items: center; gap: var(--s5); flex-wrap: wrap; margin-bottom: var(--s4); }
+  .meta-rings .mr-disco { position: relative; flex: 0 0 auto; width: 148px; height: 148px; }
+  .meta-rings .mr-disco svg { width: 100%; height: 100%; display: block; }
+  .meta-rings .mr-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; padding: 0 20px; }
+  .meta-rings .mr-mid .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .meta-rings .mr-mid .c { font-size: 0.56rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; line-height: 1.3; }
+  .meta-rings .mr-leg { flex: 1 1 180px; min-width: 160px; display: flex; flex-direction: column; gap: 8px; }
+  .meta-rings .mr-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+  .meta-rings .mr-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+  .meta-rings .mr-name { flex: 1; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta-rings .mr-pct { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ===== anel semanal de habito (rolê) ===== */
+  .week-rings { display: flex; justify-content: space-between; gap: 8px; margin-top: var(--s3); }
+  .week-rings .wr-day { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+  .week-rings .wr-lbl { font-size: 0.66rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+
+  /* ===== categorias em card com sparkline ===== */
+  .cat-spark-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s2); margin-bottom: var(--s4); }
+  .cat-spark-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+  .cat-spark-card .cs-name { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cat-spark-card .cs-val { font-size: 1.02rem; font-weight: 680; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .cat-spark-card .cs-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 650; margin-top: 3px; }
+  .cat-spark-card .cs-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .cat-spark-card svg { display: block; margin-top: 6px; }
+
+  /* ===== fluxo de caixa: area com degrade ===== */
+  .flow-area { position: relative; }
+  .flow-area svg { display: block; width: 100%; }
+  .flow-area .fa-topo { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .flow-area .fa-val { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .flow-area .fa-sub { font-size: 0.78rem; color: var(--muted); }
 </style>
 
 </head>
@@ -545,6 +593,8 @@
 
     <div id="parcialWarn" class="note" style="margin:-4px 0 14px;"></div>
 
+    <div class="acc-picker" id="accPicker"></div>
+
     <div class="kpis">
       <div class="kpi"><div class="k-label">Entradas</div><div class="k-value pos mv" id="kpiIn">–</div></div>
       <div class="kpi"><div class="k-label">Saídas</div><div class="k-value neg mv" id="kpiOut">–</div><div class="k-sub" id="kpiOutSub"></div></div>
@@ -573,11 +623,7 @@
 
     <section class="card">
       <h2>Fluxo de caixa · últimos 6 meses</h2>
-      <div class="flow" id="flowChart"></div>
-      <div class="legend">
-        <span><span class="dot" style="background:var(--accent)"></span>Entradas</span>
-        <span><span class="dot" style="background:var(--negative)"></span>Saídas</span>
-      </div>
+      <div class="flow-area" id="flowChart"></div>
     </section>
 
     <div class="kpis">
@@ -590,6 +636,12 @@
       <div class="kpi"><div class="k-label">Custo do rolê</div><div class="k-value mv" id="miniRole">–</div><div class="k-sub" id="miniRoleSub"></div></div>
       <div class="kpi"><div class="k-label">Patrimônio</div><div class="k-value mv" id="miniPatr">–</div><div class="k-sub" id="miniPatrSub"></div></div>
     </div>
+
+    <section class="card">
+      <div class="h-row"><h2>Rolê por dia da semana</h2><span class="k-sub" id="weekRingsSub"></span></div>
+      <div class="week-rings" id="weekRings"></div>
+      <p class="note" style="margin-top:10px;">Cada anel é a intensidade de gasto de Lazer + transporte de rolê naquele dia da semana, somando todas as ocorrências no período.</p>
+    </section>
 
     <section class="card">
       <div class="h-row">
@@ -787,6 +839,12 @@
       <div id="catsFull"></div>
     </section>
     <section class="card">
+      <h2>Tendência por categoria</h2>
+      <div class="cat-spark-grid" id="catSparkGrid"></div>
+      <p class="note" id="catSparkEmpty" hidden>Histórico curto demais pra tendência ainda.</p>
+    </section>
+
+    <section class="card">
       <h2>Mês a mês do período selecionado</h2>
       <div class="table-scroll" id="monthlyMatrix"></div>
       <p class="note">Renda, gastos e cada categoria, mês a mês, dentro do período escolhido lá em cima. Sem transferências internas, faturas, empréstimos e reembolsos; investimento em coluna própria. Respeita o filtro de conta.</p>
@@ -851,6 +909,7 @@
         <div class="field"><label for="mPrazo">Prazo (opcional)</label><input id="mPrazo" type="month"></div>
         <div><button class="btn primary" type="submit">Adicionar meta</button></div>
       </form>
+      <div class="meta-rings" id="metaRings"></div>
       <div id="metaList" style="margin-top:12px;"></div>
       <div class="empty" id="metaEmpty" hidden>Nenhuma meta ainda. O que você quer realizar?</div>
       <p class="note">Metas são objetivos (passaporte, curso, viagem). Defina o custo, guarde aos poucos e acompanhe o progresso. Diferente da lista de desejos, que é compra pontual.</p>
@@ -1440,15 +1499,175 @@ var SEED_ENC = null; /*__SEED__*/
   }
 
   // ---------- render principal ----------
+  // ---------- trocador de conta em cards ----------
+  var ACC_CORES = ['var(--accent)', '#7FA8D9', '#C88BC4', '#E0A66B', '#6FB8A8', '#C98A8A', '#9C9BD4', '#A8B86A'];
+  function renderAccPicker() {
+    var box = $('accPicker'); if (!box) return;
+    box.innerHTML = '';
+    var r = periodRange(), t0 = r[0], t1 = (r[1] > todayIso() ? todayIso() : r[1]);
+    function netDe(acc) {
+      var v = 0;
+      state.tx.forEach(function (t) {
+        if (t.date < t0 || t.date > t1) return;
+        if (acc && t.account !== acc) return;
+        if (isNeutral(t)) return;
+        v += t.type === 'out' ? -t.value : t.value;
+      });
+      return v;
+    }
+    var todas = document.createElement('div');
+    todas.className = 'acc-chip' + (accSel ? '' : ' on');
+    todas.innerHTML = '<span class="ac-dot" style="background:var(--muted)"></span><div><div class="ac-name">Todas</div><div class="ac-val mv">' + fmt(netDe(null)) + '</div></div>';
+    todas.addEventListener('click', function () { accSel = ''; $('accFilter').value = ''; save(); render(); });
+    box.appendChild(todas);
+    allAccounts().forEach(function (a, i) {
+      var chip = document.createElement('div');
+      chip.className = 'acc-chip' + (accSel === a ? ' on' : '');
+      chip.innerHTML = '<span class="ac-dot" style="background:' + ACC_CORES[i % ACC_CORES.length] + '"></span><div><div class="ac-name">' + a + '</div><div class="ac-val mv">' + fmt(netDe(a)) + '</div></div>';
+      chip.addEventListener('click', function () { accSel = a; $('accFilter').value = a; save(); render(); });
+      box.appendChild(chip);
+    });
+  }
+
+  // ---------- anel semanal de habito (role) ----------
+  var DOW_LBL = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  var VIZ_NS_CF = 'http://www.w3.org/2000/svg';
+  function vizElCF(tag, at) {
+    var e = document.createElementNS(VIZ_NS_CF, tag);
+    if (at) Object.keys(at).forEach(function (k) { e.setAttribute(k, at[k]); });
+    return e;
+  }
+  function anelSVG(pct, cor, size) {
+    var s = size || 34, r = s / 2 - 3.5, c = 2 * Math.PI * r, cx = s / 2, cy = s / 2;
+    var svg = vizElCF('svg', { width: s, height: s, viewBox: '0 0 ' + s + ' ' + s });
+    svg.appendChild(vizElCF('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: 'var(--surface-3)', 'stroke-width': 5 }));
+    svg.appendChild(vizElCF('circle', {
+      cx: cx, cy: cy, r: r, fill: 'none', stroke: cor, 'stroke-width': 5, 'stroke-linecap': 'round',
+      'stroke-dasharray': c.toFixed(1), 'stroke-dashoffset': (c * (1 - Math.max(0, Math.min(1, pct)))).toFixed(1),
+      transform: 'rotate(-90 ' + cx + ' ' + cy + ')'
+    }));
+    return svg;
+  }
+  function renderWeekRings() {
+    var box = $('weekRings'); if (!box) return;
+    box.innerHTML = '';
+    var r = periodRange(), t0 = r[0], t1 = (r[1] > todayIso() ? todayIso() : r[1]);
+    var porDia = [0, 0, 0, 0, 0, 0, 0];
+    state.tx.forEach(function (t) {
+      if (t.date < t0 || t.date > t1) return;
+      if (accSel && t.account !== accSel) return;
+      if (t.cat !== 'Lazer' && t.cat !== 'Transporte lazer') return;
+      var v = 0;
+      if (isRefund(t)) v = -t.value; else if (t.type === 'out') v = t.value; else return;
+      var dow = new Date(t.date + 'T12:00:00').getDay();
+      porDia[dow] += v;
+    });
+    var max = Math.max.apply(null, porDia.concat([0.01]));
+    var ordem = [1, 2, 3, 4, 5, 6, 0];
+    ordem.forEach(function (dow) {
+      var v = porDia[dow], pct = v / max;
+      var cor = pct >= 0.75 ? 'var(--neg)' : (pct >= 0.35 ? 'var(--warning)' : 'var(--pos)');
+      var cel = document.createElement('div'); cel.className = 'wr-day';
+      cel.appendChild(anelSVG(pct, v > 0 ? cor : 'var(--surface-3)', 34));
+      var lbl = document.createElement('div'); lbl.className = 'wr-lbl'; lbl.textContent = DOW_LBL[dow];
+      cel.appendChild(lbl);
+      cel.title = DOW_LBL[dow] + ': ' + fmt(v);
+      box.appendChild(cel);
+    });
+    var diaTop = ordem.reduce(function (a, b) { return porDia[b] > porDia[a] ? b : a; }, ordem[0]);
+    if ($('weekRingsSub')) $('weekRingsSub').textContent = porDia[diaTop] > 0 ? DOW_LBL[diaTop] + ' pesa mais' : '';
+  }
+
+  // ---------- metas em anel concentrico ----------
+  var META_CORES = ['var(--accent)', '#7FA8D9', '#C88BC4', '#E0A66B', '#6FB8A8', '#C98A8A'];
+  function renderMetaRings() {
+    var box = $('metaRings'); if (!box) return;
+    var metas = (state.metas || []).filter(function (m) { return (m.alvo || 0) > 0; });
+    if (!metas.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '';
+    var totalGuardado = 0;
+    metas.forEach(function (m) { totalGuardado += m.guardado || 0; });
+    var disco = document.createElement('div'); disco.className = 'mr-disco';
+    var size = 148, cx = size / 2, cy = size / 2, base = size / 2 - 9, passo = 15;
+    var svg = vizElCF('svg', { viewBox: '0 0 ' + size + ' ' + size });
+    var mostrar = metas.slice(0, 5);
+    mostrar.forEach(function (m, i) {
+      var rr = base - i * passo;
+      var c = 2 * Math.PI * rr;
+      var pct = Math.max(0, Math.min(1, (m.guardado || 0) / (m.alvo || 1)));
+      var cor = META_CORES[i % META_CORES.length];
+      svg.appendChild(vizElCF('circle', { cx: cx, cy: cy, r: rr, fill: 'none', stroke: 'var(--surface-3)', 'stroke-width': 9 }));
+      svg.appendChild(vizElCF('circle', {
+        cx: cx, cy: cy, r: rr, fill: 'none', stroke: cor, 'stroke-width': 9, 'stroke-linecap': 'round',
+        'stroke-dasharray': c.toFixed(1), 'stroke-dashoffset': (c * (1 - pct)).toFixed(1),
+        transform: 'rotate(-90 ' + cx + ' ' + cy + ')'
+      }));
+    });
+    disco.appendChild(svg);
+    var mid = document.createElement('div'); mid.className = 'mr-mid';
+    mid.innerHTML = '<div class="v mv">' + fmt(totalGuardado) + '</div><div class="c">guardado nas metas</div>';
+    disco.appendChild(mid);
+    box.appendChild(disco);
+    var leg = document.createElement('div'); leg.className = 'mr-leg';
+    mostrar.forEach(function (m, i) {
+      var pct = Math.round(Math.max(0, Math.min(1, (m.guardado || 0) / (m.alvo || 1))) * 100);
+      var it = document.createElement('div'); it.className = 'mr-item';
+      it.innerHTML = '<span class="mr-dot" style="background:' + META_CORES[i % META_CORES.length] + '"></span>' +
+        '<span class="mr-name">' + m.nome + '</span><span class="mr-pct mv">' + pct + '%</span>';
+      leg.appendChild(it);
+    });
+    box.appendChild(leg);
+  }
+
+  // ---------- tendencia por categoria (cards com sparkline) ----------
+  function renderCatSpark() {
+    var box = $('catSparkGrid'); if (!box) return;
+    box.innerHTML = '';
+    var meses = {}, cats = {};
+    state.tx.forEach(function (t) {
+      if (isNeutral(t) || isInvest(t) || t.type !== 'out') return;
+      if (t.date > todayIso()) return;
+      if (accSel && t.account !== accSel) return;
+      var ym = t.date.slice(0, 7);
+      meses[ym] = meses[ym] || {};
+      meses[ym][t.cat] = (meses[ym][t.cat] || 0) + t.value;
+      cats[t.cat] = (cats[t.cat] || 0) + t.value;
+    });
+    var yms = Object.keys(meses).sort().slice(-6);
+    if ($('catSparkEmpty')) $('catSparkEmpty').hidden = yms.length >= 2;
+    if (yms.length < 2) return;
+    var top = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; }).slice(0, 6);
+    top.forEach(function (c) {
+      var serie = yms.map(function (ym) { return (meses[ym] && meses[ym][c]) || 0; });
+      var atual = serie[serie.length - 1], antes = serie[serie.length - 2];
+      var delta = antes > 0 ? Math.round((atual - antes) / antes * 100) : (atual > 0 ? 100 : 0);
+      var cor = delta > 0 ? 'var(--neg)' : (delta < 0 ? 'var(--pos)' : 'var(--muted)');
+      var max = Math.max.apply(null, serie.concat([0.01]));
+      var w = 120, h = 26;
+      var pts = serie.map(function (v, i) { return [i * (w / (serie.length - 1)), h - (v / max) * (h - 4) - 2]; });
+      var d = pts.map(function (pt, i) { return (i === 0 ? 'M' : 'L') + pt[0].toFixed(1) + ',' + pt[1].toFixed(1); }).join(' ');
+      var card = document.createElement('div'); card.className = 'cat-spark-card';
+      var svgStr = '<svg width="100%" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+        '<path d="' + d + '" fill="none" stroke="' + cor + '" stroke-width="1.6"/></svg>';
+      card.innerHTML = '<div class="cs-name">' + c + '</div><div class="cs-val mv">' + fmt(atual) + '</div>' +
+        '<span class="cs-delta" style="color:' + cor + '"><span class="cs-dot" style="background:' + cor + '"></span>' +
+        (delta > 0 ? '+' : '') + delta + '%</span>' + svgStr;
+      box.appendChild(card);
+    });
+  }
+
   function render() {
     $('perLabel').textContent = periodLabel();
     var _pr = periodRange(), _nb = $('noInfoBanner'); if (_nb) _nb.hidden = !(_pr[1].slice(0, 7) < DATA_START);
     fillAccountSelects();
+    renderAccPicker();
     var tx = filteredTx();
     renderKpis(tx);
     renderFlow();
     renderHomeCats();
+    renderCatSpark();
     renderMinis();
+    renderWeekRings();
     renderScore();
     renderFecho();
     renderGoal();
@@ -1657,6 +1876,7 @@ var SEED_ENC = null; /*__SEED__*/
   }
 
   function renderPlan() {
+    renderMetaRings();
     // a receber
     var rbox = $('recvList'); rbox.innerHTML = '';
     var rt = 0;
@@ -1881,7 +2101,7 @@ var SEED_ENC = null; /*__SEED__*/
 
   function renderFlow() {
     var box = $('flowChart');
-    box.innerHTML = '';
+    box.innerHTML = ''; box.className = 'flow-area';
     var endYm = refMonthKey();
     var months = [];
     for (var i = 5; i >= 0; i--) months.push(shiftYm(endYm, -i));
@@ -1893,38 +2113,42 @@ var SEED_ENC = null; /*__SEED__*/
         if (isNeutral(t) || isInvest(t) || isParcela(t)) return;
         if (isRefund(t)) { tout -= t.value; return; }
         if (t.type === 'in') { tin += t.value; return; }
-        if (t.cat === 'Assinaturas') return; // vêm do widget de assinaturas, não duplicar
+        if (t.cat === 'Assinaturas') return;
         tout += t.value;
       });
-      if (!accSel) tout += subsForMonth(ym) + rentForMonth(ym); // gasto real do mês: inclui assinaturas + aluguel
-      return { ym: ym, tin: tin, tout: tout };
+      if (!accSel) tout += subsForMonth(ym) + rentForMonth(ym);
+      return { ym: ym, tin: tin, tout: tout, saldo: tin - tout };
     });
-    var max = 1;
-    data.forEach(function (d) { max = Math.max(max, d.tin, d.tout); });
-    data.forEach(function (d) {
-      var col = document.createElement('div'); col.className = 'col';
-      var bars = document.createElement('div'); bars.className = 'bars';
-      var bi = document.createElement('div');
-      bi.className = 'bar in'; bi.style.height = Math.max(2, d.tin / max * 118) + 'px';
-      bi.title = 'Entradas ' + fmt(d.tin);
-      var bo = document.createElement('div');
-      bo.className = 'bar out'; bo.style.height = Math.max(2, d.tout / max * 118) + 'px';
-      bo.title = 'Saídas ' + fmt(d.tout);
-      bars.appendChild(bi); bars.appendChild(bo);
-      var lbl = document.createElement('div');
-      lbl.className = 'm-label';
-      lbl.textContent = MONTHS_S[+d.ym.slice(5, 7) - 1];
-      var val = document.createElement('div');
-      val.className = 'm-val mv';
-      var saldo = d.tin - d.tout;
-      val.textContent = (saldo >= 0 ? '+' : '−') + Math.round(Math.abs(saldo) / 100) / 10 + 'k';
-      val.style.color = saldo >= 0 ? 'var(--pos)' : 'var(--neg)';
-      if (d.ym === mesCorrente()) col.classList.add('parcial');
-      col.title = MONTHS[+d.ym.slice(5, 7) - 1] + ': entrou ' + fmt(d.tin) + ', saiu ' + fmt(d.tout) +
-        (d.ym === mesCorrente() ? ' (mês ainda aberto)' : '');
-      col.appendChild(bars); col.appendChild(val); col.appendChild(lbl);
-      box.appendChild(col);
-    });
+    var topo = document.createElement('div'); topo.className = 'fa-topo';
+    var ultimo = data[data.length - 1];
+    var vv = document.createElement('span'); vv.className = 'fa-val mv';
+    vv.style.color = ultimo.saldo >= 0 ? 'var(--pos)' : 'var(--neg)';
+    vv.textContent = fmt(ultimo.saldo);
+    var ss = document.createElement('span'); ss.className = 'fa-sub';
+    ss.textContent = 'saldo de ' + MONTHS[+ultimo.ym.slice(5, 7) - 1] + ' · entrou ' + fmt(ultimo.tin) + ' · saiu ' + fmt(ultimo.tout);
+    topo.appendChild(vv); topo.appendChild(ss); box.appendChild(topo);
+
+    var W = 560, H = 130, padL = 4, padR = 4, padT = 14, padB = 20;
+    var maxAbs = Math.max.apply(null, data.map(function (d) { return Math.abs(d.saldo); }).concat([1]));
+    function px(i) { return padL + i * ((W - padL - padR) / Math.max(1, data.length - 1)); }
+    function py(v) { return padT + (1 - (v + maxAbs) / (2 * maxAbs)) * (H - padT - padB); }
+    var base = py(0);
+    var pts = data.map(function (d, i) { return [px(i), py(d.saldo)]; });
+    var linha = pts.map(function (pt, i) { return (i === 0 ? 'M' : 'L') + pt[0].toFixed(1) + ',' + pt[1].toFixed(1); }).join(' ');
+    var area = linha + ' L' + px(data.length - 1).toFixed(1) + ',' + base.toFixed(1) + ' L' + px(0).toFixed(1) + ',' + base.toFixed(1) + ' Z';
+    var uid = 'cffa' + Math.round(Math.random() * 1e6);
+    var svgStr = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+      '<defs><linearGradient id="' + uid + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="var(--accent)" stop-opacity="0.32"/>' +
+      '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>' +
+      '<line x1="' + padL + '" y1="' + base.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + base.toFixed(1) + '" stroke="var(--line)" stroke-width="1"/>' +
+      '<path d="' + area + '" fill="url(#' + uid + ')"/>' +
+      '<path d="' + linha + '" fill="none" stroke="var(--accent)" stroke-width="2.5"/>' +
+      data.map(function (d, i) { return '<circle cx="' + pts[i][0].toFixed(1) + '" cy="' + pts[i][1].toFixed(1) + '" r="' + (i === data.length - 1 ? 4 : 2.5) + '" fill="' + (d.saldo >= 0 ? 'var(--pos)' : 'var(--neg)') + '"/>'; }).join('') +
+      data.map(function (d, i) { return '<text x="' + pts[i][0].toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (i === 0 ? 'start' : (i === data.length - 1 ? 'end' : 'middle')) + '" font-size="10" fill="var(--muted)">' + MONTHS_S[+d.ym.slice(5, 7) - 1] + '</text>'; }).join('') +
+      '</svg>';
+    var wrap = document.createElement('div'); wrap.innerHTML = svgStr;
+    box.appendChild(wrap.firstChild);
   }
 
   function catTotals(tx) {
