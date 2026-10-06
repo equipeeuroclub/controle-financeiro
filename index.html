@@ -361,13 +361,6 @@
   .ext-summary .count { font-size: 0.83rem; color: var(--muted); }
   .ext-cat { padding: 4px 6px; border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--surface-2); font-size: 0.76rem; max-width: 128px; }
 
-  /* ===== privacidade (sem filter: zero camada de GPU) ===== */
-  body.priv .mv, body.priv .mv * { color: transparent !important; user-select: none; }
-  body.priv .mv { text-shadow: 0 0 0.6em var(--ink); }
-  /* o <b> do sub tinha cor propria e escapava do borrao; herda o do pai agora */
-  body.priv .mv * { text-shadow: inherit; }
-  .eye-btn.on { color: var(--accent); border-color: var(--accent); }
-
   /* ===== agenda ===== */
   .ag-add { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
   .ag-add input[type="text"] { flex: 1 1 240px; min-width: 0; }
@@ -825,7 +818,7 @@
     </div>
     <div class="toolbar">
       <button class="btn primary" id="quickAdd" type="button">＋ Lançar gasto</button>
-      <button class="btn icon eye-btn" id="eyeBtn" type="button" aria-label="Mostrar ou esconder valores" title="Mostrar/esconder valores">👁</button>
+      <button class="btn" id="quickIn" type="button">＋ Lançar recebimento</button>
     </div>
   </header>
 
@@ -869,8 +862,7 @@
   <!-- VISÃO GERAL -->
   <div class="panel active" id="panel-geral" role="tabpanel" aria-labelledby="tabbtn-geral">
 
-    <!-- assistente de IA: só funciona dentro do Claude, fora daqui fica oculto -->
-
+    
 
     <div class="anchor" id="anchorCard">
       <div class="a-txt">
@@ -1741,21 +1733,9 @@ var SEED_ENC = null; /*__SEED__*/
   function toast(msg, actLabel, actFn) { toastBase(msg, actLabel, actFn, actLabel ? 8000 : 2600); }
   function toastFixo(msg, actLabel, actFn) { toastBase(msg, actLabel, actFn, 0); }
 
-  // ---------- privacidade ----------
-  function applyPriv() {
-    var revealed = sessionStorage.getItem('lf-reveal') === '1';
-    document.body.classList.toggle('priv', !revealed);
-    $('eyeBtn').classList.toggle('on', revealed);
-    $('eyeBtn').textContent = revealed ? '👁' : '🙈';
-  }
-  $('quickAdd').addEventListener('click', function () { abrirLancamentoRapido(); });
-  $('eyeBtn').addEventListener('click', function () {
-    var revealed = sessionStorage.getItem('lf-reveal') === '1';
-    sessionStorage.setItem('lf-reveal', revealed ? '0' : '1');
-    applyPriv();
-  });
-
-  // ---------- tabs ----------
+  $('quickAdd').addEventListener('click', function () { abrirLancamentoRapido('out'); });
+  var _qi = $('quickIn'); if (_qi) _qi.addEventListener('click', function () { abrirLancamentoRapido('in'); });
+    // ---------- tabs ----------
   $('tabs').addEventListener('click', function (e) {
     var btn = e.target.closest('.tab');
     if (!btn) return;
@@ -5533,8 +5513,8 @@ var SEED_ENC = null; /*__SEED__*/
     });
   }
 
-  function abrirLancamentoRapido() {
-    var tipo = 'out';
+  function abrirLancamentoRapido(tipoInicial) {
+    var tipo = tipoInicial === 'in' ? 'in' : 'out';
     var cat = null;
     var quando = todayIso();
     var elVal, elDesc, elAcc, boxCats, btnOk;
@@ -5562,10 +5542,12 @@ var SEED_ENC = null; /*__SEED__*/
     btnOk = document.createElement('button');
     btnOk.className = 'btn primary'; btnOk.type = 'button'; btnOk.textContent = 'Lançar'; btnOk.disabled = true;
 
-    var sh = abrirSheet('Novo lançamento', function (box) {
+    var sh = abrirSheet(tipo === 'in' ? 'Novo recebimento' : 'Novo gasto', function (box) {
       var tipos = document.createElement('div'); tipos.className = 'qa-tipo';
-      var bOut = document.createElement('button'); bOut.type = 'button'; bOut.textContent = 'Gasto'; bOut.className = 'on';
+      var bOut = document.createElement('button'); bOut.type = 'button'; bOut.textContent = 'Gasto';
       var bIn = document.createElement('button'); bIn.type = 'button'; bIn.textContent = 'Recebimento';
+      bOut.className = tipo === 'out' ? 'on' : '';
+      bIn.className = tipo === 'in' ? 'on' : '';
       tipos.appendChild(bOut); tipos.appendChild(bIn);
       box.appendChild(tipos);
 
@@ -5657,12 +5639,6 @@ var SEED_ENC = null; /*__SEED__*/
       b.addEventListener('click', function () { fecharSheet(); switchTab(d[0]); window.scrollTo(0, 0); });
       return b;
     });
-    var olho = document.createElement('button');
-    olho.className = 'btn'; olho.type = 'button';
-    olho.textContent = document.body.classList.contains('priv') ? 'Mostrar valores' : 'Esconder valores';
-    olho.style.flex = '1 1 44%';
-    olho.addEventListener('click', function () { fecharSheet(); $('eyeBtn').click(); });
-    botoes.push(olho);
     abrirSheet('Ir para', function (sh) {
       var p = document.createElement('p'); p.className = 'note'; p.style.margin = '0';
       p.textContent = 'As outras seções do painel.';
@@ -5695,7 +5671,6 @@ var SEED_ENC = null; /*__SEED__*/
     if (e.key === 'n' || e.key === 'N') { e.preventDefault(); abrirLancamentoRapido(); return; }
     if (e.key === '/') { e.preventDefault(); switchTab('tx'); setTimeout(function () { $('txSearch').focus(); }, 60); return; }
     if (e.key === 'e' || e.key === 'E') { e.preventDefault(); switchTab('tx'); window.scrollTo(0, 0); return; }
-    if (e.key === 'p' || e.key === 'P') { e.preventDefault(); $('eyeBtn').click(); return; }
     if (e.key === 'ArrowLeft' && (per.mode === 'mes' || per.mode === 'ano')) { e.preventDefault(); shiftPeriod(-1); return; }
     if (e.key === 'ArrowRight' && (per.mode === 'mes' || per.mode === 'ano')) { e.preventDefault(); shiftPeriod(1); return; }
     if (e.key === '?') {
@@ -5727,7 +5702,6 @@ var SEED_ENC = null; /*__SEED__*/
   // ---------- init ----------
   $('fDate').value = todayIso();
   $('customRange').hidden = true;
-  applyPriv();
   fillCats();
   lixeiraPurge();
   atualizaEco();
